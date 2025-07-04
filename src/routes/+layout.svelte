@@ -4,4 +4,10 @@
     let {children} = $props();
 </script>
 
-{@render children()}
+<nav>
+    <a href="/">Home</a>
+</nav>
+
+<main class="mx-auto container">
+    {@render children()}
+</main>
