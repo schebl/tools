@@ -5,8 +5,6 @@
 </script>
 
 <nav>
-    <a href="/">Home</a>
-
     <a href="/symbols">Symbols</a>
 
     <a href="/midpoint">Midpoint</a>
