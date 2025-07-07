@@ -1,1 +1,18 @@
 @import 'tailwindcss';
+
+@layer base {
+    html {
+        color: var(--color-foreground);
+        background-color: var(--color-background);
+    }
+}
+
+@theme {
+    --color-*: initial;
+
+    --color-background: #f6f6f6;
+    --color-foreground: #0a0a0a;
+    --color-primary: #ad2a4d;
+    --color-primary-foreground: #fcfcfc;
+    --color-border: #c2c2c2;
+}
