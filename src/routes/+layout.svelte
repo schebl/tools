@@ -8,6 +8,8 @@
     <a href="/">Home</a>
 
     <a href="/symbols">Symbols</a>
+
+    <a href="/midpoint">Midpoint</a>
 </nav>
 
 <main class="mx-auto container">
