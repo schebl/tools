@@ -1,4 +1,5 @@
 <script lang="ts">
+    import Button from "$lib/components/Button.svelte";
     import {CHAR_GROUPS, type Group, type GroupKey} from "$lib/symbols";
 
     let text = $state("");
@@ -18,7 +19,7 @@
 
     function highlightChar(code: number): string {
         const hex = code.toString(16).toUpperCase().padStart(4, "0");
-        return `<span class="bg-teal-200 px-0.5 rounded-xs">U+${hex}</span>`;
+        return `<span class="bg-primary text-primary-foreground px-0.5 rounded-xs">U+${hex}</span>`;
     }
 
     function escapeHTML(unsafe: string): string {
@@ -68,6 +69,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Symbols</title>
+</svelte:head>
+
 <div class="flex gap-8">
     <div class="flex flex-col gap-1">
         <p>Highlighting</p>
@@ -111,23 +116,15 @@
 
             <textarea
                 bind:value={text}
-                class="resize-y whitespace-pre-wrap break-all rounded-sm border font-mono px-0.5"
+                class="resize-y whitespace-pre-wrap break-all rounded-sm border font-mono border-border px-0.5"
                 id="text"
                 rows="4"
             ></textarea>
 
             <div class="flex gap-2">
-                <button
-                    class="rounded-sm border px-1" onclick={() => {clipboardWrite(text)}}
-                >
-                    Copy
-                </button>
+                <Button onclick={() => {clipboardWrite(text)}}>Copy</Button>
 
-                <button
-                    class="rounded-sm border px-1" onclick={() => {text = ""}}
-                >
-                    Clear
-                </button>
+                <Button onclick={() => {text = ""}}>Clear</Button>
             </div>
         </div>
 
@@ -135,24 +132,18 @@
             <p>Highlighted symbols</p>
 
             <div class="grid gap-2">
-                <pre class="whitespace-pre-wrap break-all rounded-sm border min-h-24 px-0.5">{@html render}</pre>
+                <pre class="whitespace-pre-wrap break-all rounded-sm border border-border min-h-24 px-0.5">{@html render}</pre>
 
                 <div class="flex gap-2">
                     <div>{highlightedCount} found</div>
 
-                    <button
-                        class="rounded-sm border px-1"
-                        onclick={() => {text = replaceChars(text, ' ', isSelected)}}
-                    >
+                    <Button onclick={() => {text = replaceChars(text, ' ', isSelected)}}>
                         Replace with space
-                    </button>
+                    </Button>
 
-                    <button
-                        class="rounded-sm border px-1"
-                        onclick={() => {text = replaceChars(text, '', isSelected)}}
-                    >
+                    <Button onclick={() => {text = replaceChars(text, '', isSelected)}}>
                         Remove
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

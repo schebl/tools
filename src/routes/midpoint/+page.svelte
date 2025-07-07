@@ -8,6 +8,10 @@
     let midpoint = $derived(point1.midpoint(point2));
 </script>
 
+<svelte:head>
+    <title>Midpoint</title>
+</svelte:head>
+
 <div class="grid gap-4">
     <div class="flex gap-4">
         <div class="grid gap-1">
@@ -18,7 +22,7 @@
 
                 <input
                     bind:value={point1.x}
-                    class="rounded-sm border px-1"
+                    class="rounded-sm border px-1 border-border"
                     id="first-point-x"
                     type="number"
                 >
@@ -29,7 +33,7 @@
 
                 <input
                     bind:value={point1.y}
-                    class="rounded-sm border px-1"
+                    class="rounded-sm border px-1 border-border"
                     id="first-point-y"
                     type="number"
                 >
@@ -40,7 +44,7 @@
 
                 <input
                     bind:value={point1.z}
-                    class="rounded-sm border px-1"
+                    class="rounded-sm border px-1 border-border"
                     id="first-point-z"
                     type="number"
                 >
@@ -55,7 +59,7 @@
 
                 <input
                     bind:value={point2.x}
-                    class="rounded-sm border px-1"
+                    class="rounded-sm border px-1 border-border"
                     id="second-point-x"
                     type="number"
                 >
@@ -66,7 +70,7 @@
 
                 <input
                     bind:value={point2.y}
-                    class="rounded-sm border px-1"
+                    class="rounded-sm border px-1 border-border"
                     id="second-point-y"
                     type="number"
                 >
@@ -77,7 +81,7 @@
 
                 <input
                     bind:value={point2.z}
-                    class="rounded-sm border px-1"
+                    class="rounded-sm border px-1 border-border"
                     id="second-point-z"
                     type="number"
                 >
@@ -85,7 +89,7 @@
         </div>
     </div>
 
-    <div class="max-w-80">
+    <div>
         <div class="flex justify-between gap-2">
             <p>Distance</p>
 
