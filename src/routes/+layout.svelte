@@ -1,5 +1,6 @@
 <script lang="ts">
     import "../app.css";
+    import {base} from "$app/paths";
     import {page} from "$app/state";
 
     let {children} = $props();
@@ -10,8 +11,8 @@
         <nav class="-mr-4 grid gap-2">
             {#snippet route(label: string, href: string)}
                 <a
-                    class={(page.url.pathname === href ? 'rounded-l-md bg-background text-foreground' : '') + " py-1 px-12"}
-                    href={href}
+                    class={(page.url.pathname === base + href ? 'rounded-l-md bg-background text-foreground' : '') + " py-1 px-12"}
+                    href={base + href}
                 >{label}</a>
             {/snippet}
 
