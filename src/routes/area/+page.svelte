@@ -9,9 +9,7 @@
     const selection = new SelectionStore();
 
     const toolManager = new ToolManager();
-    toolManager.register(addPointTool);
-    toolManager.register(movePointTool);
-    toolManager.register(selectPointTool);
+    toolManager.register(addPointTool, movePointTool, selectPointTool);
 
     function getToolCtx(renderer?: Renderer): Omit<ToolContext, "event"> {
         return {

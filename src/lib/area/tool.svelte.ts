@@ -25,8 +25,10 @@ export class ToolManager {
     private activeDescriptor = $state<ToolDescriptor | null>(null);
     private activeTool = $state<Tool | null>(null);
 
-    public register(tool: ToolDescriptor): void {
-        this.descriptors.push(tool);
+    public register(...tools: ToolDescriptor[]): void {
+        for (const tool of tools) {
+            this.descriptors.push(tool);
+        }
     }
 
     public activate(toolID: string, ctx: Omit<ToolContext, "event">): void {
