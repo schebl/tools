@@ -62,14 +62,18 @@ export class ToolManager {
             event: event,
         };
 
-        if (event.type === "pointerdown") {
+        switch (event.type) {
+        case "pointerdown":
             this.activeTool = this.activeDescriptor.create();
             this.activeTool.start(ctx);
-        } else if (event.type === "pointermove" && this.activeTool?.update) {
-            this.activeTool.update(ctx);
-        } else if (event.type === "pointerup" && this.activeTool) {
-            this.activeTool.end(ctx);
+            break;
+        case "pointermove":
+            this.activeTool?.update(ctx);
+            break;
+        case "pointerup":
+            this.activeTool?.end(ctx);
             this.activeTool = null;
+            break;
         }
     }
 }
