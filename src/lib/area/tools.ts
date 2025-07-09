@@ -1,4 +1,4 @@
-import type {Point2D} from "$lib/area/shape.svelte";
+import {Point2D} from "$lib/area/shape.svelte";
 import type {Tool, ToolContext, ToolDescriptor} from "$lib/area/tool.svelte";
 
 const DRAG_THRESHOLD = 5;
@@ -18,10 +18,10 @@ export const addPointTool: ToolDescriptor = {
                 selection,
                 event,
             }: ToolContext): void => {
-                selection.shape?.points.push({
-                    x: event.offsetX,
-                    y: event.offsetY,
-                });
+                const hit = new Point2D(event.offsetX, event.offsetY);
+
+                selection.shape?.addPoint(hit);
+                selection.selectPoint(hit);
             },
             update({}: ToolContext) {
             },
@@ -47,17 +47,11 @@ export const movePointTool: ToolDescriptor = {
                 selection,
                 event,
             }: ToolContext): void => {
-                for (const point of selection.shape?.points ?? []) {
-                    const hit = {
-                        x: event.offsetX,
-                        y: event.offsetY,
-                    };
-
-                    if (didHit(point, hit)) {
-                        movingPoint = point;
-                        // TODO: shouldn't move unselected point
-                        selection.selectPoint(point);
-                    }
+                if (selection.point && didHit(
+                    selection.point,
+                    new Point2D(event.offsetX, event.offsetY),
+                )) {
+                    movingPoint = selection.point;
                 }
             },
             update({event}: ToolContext) {
@@ -87,31 +81,25 @@ export const selectPointTool: ToolDescriptor = {
         let isDragging = false;
 
         return {
-            start: ({
-                event,
-            }: ToolContext): void => {
-                start = {
-                    x: event.offsetX,
-                    y: event.offsetY,
-                };
+            start: ({event}: ToolContext): void => {
+                start = new Point2D(event.offsetX, event.offsetY);
             },
             update({
                 event,
                 renderer,
             }: ToolContext) {
-                const x = event.offsetX;
-                const y = event.offsetY;
+                const hit = new Point2D(event.offsetX, event.offsetY);
 
                 if (!isDragging) {
-                    if (Math.abs(x - start.x) > DRAG_THRESHOLD || Math.abs(y - start.y)
+                    if (Math.abs(hit.x - start.x) > DRAG_THRESHOLD || Math.abs(hit.y - start.y)
                         > DRAG_THRESHOLD) {
                         isDragging = true;
                     }
                 }
 
                 if (isDragging && renderer) {
-                    const w = x - start.x;
-                    const h = y - start.y;
+                    const w = hit.x - start.x;
+                    const h = hit.y - start.y;
 
                     renderer.redraw();
                     renderer.drawSelectionBox(start.x, start.y, w, h);
@@ -122,12 +110,9 @@ export const selectPointTool: ToolDescriptor = {
                 selection,
                 renderer,
             }: ToolContext) {
-                const end = {
-                    x: event.offsetX,
-                    y: event.offsetY,
-                };
+                const end = new Point2D(event.offsetX, event.offsetY);
 
-                selection.point = null;
+                selection.selectPoint(null);
 
                 if (!isDragging) {
                     for (const point of selection.shape?.points ?? []) {

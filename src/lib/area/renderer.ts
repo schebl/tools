@@ -1,4 +1,4 @@
-import {type Point2D, SelectionStore, type Shape} from "$lib/area/shape.svelte";
+import {Point2D, SelectionStore, type Shape} from "$lib/area/shape.svelte";
 
 const POINT_SIZE = 4;
 const SELECTED_POINT_SIZE = 6;
