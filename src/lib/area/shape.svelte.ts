@@ -24,6 +24,10 @@ export class SelectionStore {
     public point: Point2D | null = $state(null);
     public shape: Shape | null = $state(null);
 
+    /**
+     * Selects given point. Point must be one of points of currently selected shape. Passing null
+     * will remove point selection.
+     */
     public selectPoint(point: Point2D | null): void {
         if (point && this.shape?.hasPoint(point)) {
             this.point = point;

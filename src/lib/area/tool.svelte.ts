@@ -7,6 +7,9 @@ export interface ToolContext {
     renderer: Renderer | null;
 }
 
+/**
+ * Represents lifecycle of canvas tool.
+ */
 export interface Tool {
     start(ctx: ToolContext): void;
     update(ctx: ToolContext): void;
@@ -25,12 +28,18 @@ export class ToolManager {
     private activeDescriptor = $state<ToolDescriptor | null>(null);
     private activeTool = $state<Tool | null>(null);
 
+    /**
+     * Registers given tools. Registered tools are available for activation.
+     */
     public register(...tools: ToolDescriptor[]): void {
         for (const tool of tools) {
             this.descriptors.push(tool);
         }
     }
 
+    /**
+     * Marks tool as active. Active tool will be used in event handling.
+     */
     public activate(toolID: string, ctx: Omit<ToolContext, "event">): void {
         const descriptor = this.descriptors.find(d => d.id === toolID);
         if (descriptor && descriptor.isApplicable(ctx)) {
