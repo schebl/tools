@@ -54,8 +54,17 @@ export class Renderer {
         }
 
         this.ctx.beginPath();
-        for (const point of shape.points) {
-            this.drawPoint(point, isShapeSelected);
+
+        for (let i = 0; i < shape.points.length; i++) {
+            const current = shape.points[i];
+            const next = shape.points[(i + 1) % shape.points.length];
+
+            if (i === 0) {
+                this.ctx.moveTo(current.x, current.y);
+            }
+            this.ctx.lineTo(next.x, next.y);
+
+            this.drawPoint(current, isShapeSelected);
         }
 
         this.ctx.stroke();
@@ -63,8 +72,6 @@ export class Renderer {
     }
 
     private drawPoint(point: Point2D, isParentSelected: boolean) {
-        this.ctx.lineTo(point.x, point.y);
-
         if (isParentSelected) {
             if (this.selection.point === point) {
                 this.ctx.fillRect(
