@@ -6,6 +6,36 @@ export class Point2D {
         this.x = $state(x);
         this.y = $state(y);
     }
+
+    public distanceToLine(start: Point2D, end: Point2D): number {
+        const vectorToPoint = new Point2D(this.x - start.x, this.y - start.y);
+        const lineVector = new Point2D(end.x - start.x, end.y - start.y);
+
+        const dotProduct = vectorToPoint.x * lineVector.x + vectorToPoint.y * lineVector.y;
+        const lineLenSquared = lineVector.x ** 2 + lineVector.y ** 2;
+
+        let projection = -1;
+        if (lineLenSquared !== 0) {
+            projection = dotProduct / lineLenSquared;
+        }
+
+        let closest = new Point2D(0, 0);
+        if (projection < 0) {
+            closest.x = start.x;
+            closest.y = start.y;
+        } else if (projection > 1) {
+            closest.x = end.x;
+            closest.y = end.y;
+        } else {
+            closest.x = start.x + projection * lineVector.x;
+            closest.y = start.y + projection * lineVector.y;
+        }
+
+        const dx = this.x - closest.x;
+        const dy = this.y - closest.y;
+
+        return Math.hypot(dx, dy);
+    }
 }
 
 export class Shape {
@@ -13,6 +43,10 @@ export class Shape {
 
     public addPoint(point: Point2D): void {
         this.points.push(point);
+    }
+
+    public insertAt(index: number, point: Point2D): void {
+        this.points.splice(index, 0, point);
     }
 
     public hasPoint(point: Point2D): boolean {

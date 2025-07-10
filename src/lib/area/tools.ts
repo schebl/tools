@@ -72,9 +72,24 @@ export const addPointTool: ToolDescriptor = {
                 selection,
                 event,
             }: ToolContext): void => {
+                if (!selection.shape) {
+                    return;
+                }
+
                 const hit = new Point2D(event.offsetX, event.offsetY);
 
-                selection.shape?.addPoint(hit);
+                for (let i = 0; i < selection.shape.points.length; i++) {
+                    const nextI = (i + 1) % selection.shape.points.length;
+
+                    const current = selection.shape.points[i];
+                    const next = selection.shape.points[nextI];
+
+                    if (hit.distanceToLine(current, next) < 10) {
+                        selection.shape.insertAt(nextI, hit);
+                        break;
+                    }
+                }
+
                 selection.selectPoint(hit);
             },
             update({}: ToolContext) {
