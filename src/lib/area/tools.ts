@@ -1,4 +1,4 @@
-import {Point2D, Shape} from "$lib/area/shape.svelte";
+import {BezierPoint, Point2D, Shape} from "$lib/area/shape.svelte";
 import type {Tool, ToolContext, ToolDescriptor} from "$lib/area/tool.svelte";
 
 const DRAG_THRESHOLD = 5;
@@ -47,10 +47,10 @@ export const createRectTool: ToolDescriptor = {
                 const h = click.y - start.y;
 
                 const shape = new Shape();
-                shape.addPoint(new Point2D(start.x, start.y));
-                shape.addPoint(new Point2D(start.x + w, start.y));
-                shape.addPoint(new Point2D(start.x + w, start.y + h));
-                shape.addPoint(new Point2D(start.x, start.y + h));
+                shape.addPoint(BezierPoint.fromXY(start.x, start.y));
+                shape.addPoint(BezierPoint.fromXY(start.x + w, start.y));
+                shape.addPoint(BezierPoint.fromXY(start.x + w, start.y + h));
+                shape.addPoint(BezierPoint.fromXY(start.x, start.y + h));
 
                 shapes.push(shape);
                 selection.selectShape(shape);
@@ -77,7 +77,7 @@ export const addPointTool: ToolDescriptor = {
                     return;
                 }
 
-                const hit = new Point2D(event.offsetX, event.offsetY);
+                const hit = BezierPoint.fromXY(event.offsetX, event.offsetY);
 
                 for (let i = 0; i < selection.shape.points.length; i++) {
                     const nextI = (i + 1) % selection.shape.points.length;
@@ -110,16 +110,18 @@ export const movePointTool: ToolDescriptor = {
     },
 
     create(): Tool {
-        let movingPoint: Point2D;
+        let movingPoint: BezierPoint;
 
         return {
             start: ({
                 selection,
                 event,
             }: ToolContext): void => {
+                const click = new Point2D(event.offsetX, event.offsetY);
+
                 if (selection.point && didHit(
-                    selection.point,
-                    new Point2D(event.offsetX, event.offsetY),
+                    selection.point.anchor,
+                    click,
                 )) {
                     movingPoint = selection.point;
                 }
@@ -129,8 +131,8 @@ export const movePointTool: ToolDescriptor = {
                     return;
                 }
 
-                movingPoint.x = event.offsetX;
-                movingPoint.y = event.offsetY;
+                movingPoint.anchor.x = event.offsetX;
+                movingPoint.anchor.y = event.offsetY;
             },
             end({}: ToolContext) {
             },
@@ -186,7 +188,7 @@ export const selectPointTool: ToolDescriptor = {
 
                 if (!isDragging) {
                     for (const point of selection.shape?.points ?? []) {
-                        if (didHit(point, end)) {
+                        if (didHit(point.anchor, end)) {
                             selection.selectPoint(point);
                             break;
                         }
@@ -199,9 +201,10 @@ export const selectPointTool: ToolDescriptor = {
                     const x1 = Math.max(start.x, end.x);
                     const y1 = Math.max(start.y, end.y);
 
-                    const hits: Point2D[] = [];
+                    const hits: BezierPoint[] = [];
                     for (const point of selection.shape?.points ?? []) {
-                        if (point.x >= x0 && point.x <= x1 && point.y >= y0 && point.y <= y1) {
+                        if (point.anchor.x >= x0 && point.anchor.x <= x1 && point.anchor.y >= y0
+                            && point.anchor.y <= y1) {
                             hits.push(point);
                         }
                     }

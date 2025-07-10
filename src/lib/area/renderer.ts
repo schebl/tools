@@ -1,4 +1,4 @@
-import {Point2D, SelectionStore, type Shape} from "$lib/area/shape.svelte";
+import {BezierPoint, SelectionStore, type Shape} from "$lib/area/shape.svelte";
 
 const POINT_SIZE = 4;
 const SELECTED_POINT_SIZE = 6;
@@ -60,9 +60,9 @@ export class Renderer {
             const next = shape.points[(i + 1) % shape.points.length];
 
             if (i === 0) {
-                this.ctx.moveTo(current.x, current.y);
+                this.ctx.moveTo(current.anchor.x, current.anchor.y);
             }
-            this.ctx.lineTo(next.x, next.y);
+            this.ctx.lineTo(next.anchor.x, next.anchor.y);
 
             this.drawPoint(current, isShapeSelected);
         }
@@ -71,12 +71,12 @@ export class Renderer {
         this.ctx.restore();
     }
 
-    private drawPoint(point: Point2D, isParentSelected: boolean) {
+    private drawPoint(point: BezierPoint, isParentSelected: boolean) {
         if (isParentSelected) {
             if (this.selection.point === point) {
                 this.ctx.fillRect(
-                    point.x - SELECTED_POINT_SIZE / 2,
-                    point.y - SELECTED_POINT_SIZE / 2,
+                    point.anchor.x - SELECTED_POINT_SIZE / 2,
+                    point.anchor.y - SELECTED_POINT_SIZE / 2,
                     SELECTED_POINT_SIZE,
                     SELECTED_POINT_SIZE,
                 );
@@ -84,8 +84,8 @@ export class Renderer {
             }
 
             this.ctx.fillRect(
-                point.x - POINT_SIZE / 2,
-                point.y - POINT_SIZE / 2,
+                point.anchor.x - POINT_SIZE / 2,
+                point.anchor.y - POINT_SIZE / 2,
                 POINT_SIZE,
                 POINT_SIZE,
             );

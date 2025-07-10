@@ -6,10 +6,36 @@ export class Point2D {
         this.x = $state(x);
         this.y = $state(y);
     }
+}
 
-    public distanceToLine(start: Point2D, end: Point2D): number {
-        const vectorToPoint = new Point2D(this.x - start.x, this.y - start.y);
-        const lineVector = new Point2D(end.x - start.x, end.y - start.y);
+export class BezierPoint {
+    public anchor: Point2D;
+    public handleIn: Point2D;
+    public handleOut: Point2D;
+
+    public constructor(position: Point2D, handleIn: Point2D, handleOut: Point2D) {
+        this.anchor = position;
+        this.handleIn = handleIn;
+        this.handleOut = handleOut;
+    }
+
+    public static fromXY(x: number, y: number): BezierPoint {
+        return new BezierPoint(
+            new Point2D(x, y),
+            new Point2D(x, y),
+            new Point2D(x, y),
+        );
+    }
+
+    public distanceToLine(start: BezierPoint, end: BezierPoint): number {
+        const vectorToPoint = new Point2D(
+            this.anchor.x - start.anchor.x,
+            this.anchor.y - start.anchor.y,
+        );
+        const lineVector = new Point2D(
+            end.anchor.x - start.anchor.x,
+            end.anchor.y - start.anchor.y,
+        );
 
         const dotProduct = vectorToPoint.x * lineVector.x + vectorToPoint.y * lineVector.y;
         const lineLenSquared = lineVector.x ** 2 + lineVector.y ** 2;
@@ -21,48 +47,48 @@ export class Point2D {
 
         let closest = new Point2D(0, 0);
         if (projection < 0) {
-            closest.x = start.x;
-            closest.y = start.y;
+            closest.x = start.anchor.x;
+            closest.y = start.anchor.y;
         } else if (projection > 1) {
-            closest.x = end.x;
-            closest.y = end.y;
+            closest.x = end.anchor.x;
+            closest.y = end.anchor.y;
         } else {
-            closest.x = start.x + projection * lineVector.x;
-            closest.y = start.y + projection * lineVector.y;
+            closest.x = start.anchor.x + projection * lineVector.x;
+            closest.y = start.anchor.y + projection * lineVector.y;
         }
 
-        const dx = this.x - closest.x;
-        const dy = this.y - closest.y;
+        const dx = this.anchor.x - closest.x;
+        const dy = this.anchor.y - closest.y;
 
         return Math.hypot(dx, dy);
     }
 }
 
 export class Shape {
-    public points = $state<Point2D[]>([]);
+    public points = $state<BezierPoint[]>([]);
 
-    public addPoint(point: Point2D): void {
+    public addPoint(point: BezierPoint): void {
         this.points.push(point);
     }
 
-    public insertAt(index: number, point: Point2D): void {
+    public insertAt(index: number, point: BezierPoint): void {
         this.points.splice(index, 0, point);
     }
 
-    public hasPoint(point: Point2D): boolean {
+    public hasPoint(point: BezierPoint): boolean {
         return !!this.points.find(p => p === point);
     }
 }
 
 export class SelectionStore {
-    public point: Point2D | null = $state(null);
+    public point: BezierPoint | null = $state(null);
     public shape: Shape | null = $state(null);
 
     /**
      * Selects given point. Point must be one of points of currently selected shape. Passing null
      * will remove point selection.
      */
-    public selectPoint(point: Point2D | null): void {
+    public selectPoint(point: BezierPoint | null): void {
         if (point && this.shape?.hasPoint(point)) {
             this.point = point;
             return;
