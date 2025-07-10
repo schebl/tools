@@ -2,17 +2,19 @@
     import {Renderer} from "$lib/area/renderer";
     import {SelectionStore, Shape} from "$lib/area/shape.svelte";
     import {type ToolContext, ToolManager} from "$lib/area/tool.svelte";
-    import {addPointTool, movePointTool, selectPointTool} from "$lib/area/tools";
+    import {addPointTool, createRectTool, movePointTool, selectPointTool} from "$lib/area/tools";
     import type {Attachment} from "svelte/attachments";
 
     const shapes = $state<Shape[]>([]);
     const selection = new SelectionStore();
 
     const toolManager = new ToolManager();
+    toolManager.register(createRectTool);
     toolManager.register(addPointTool, movePointTool, selectPointTool);
 
     function getToolCtx(renderer?: Renderer): Omit<ToolContext, "event"> {
         return {
+            shapes: shapes,
             selection: selection,
             renderer: renderer ?? null,
         };
@@ -56,11 +58,9 @@
     <div>
         <p>Shapes</p>
 
-        <button onclick={() => {shapes.push(new Shape())}}>Add shape</button>
-
         {#each shapes as shape, i}
             <div>
-                <label for="selection-shape-{i}">Selected</label>
+                <label for="selection-shape-{i}">Shape {i + 1}</label>
 
                 <input
                     onclick={() => {selection.selectShape(shape)}}

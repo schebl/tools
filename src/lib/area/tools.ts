@@ -1,8 +1,62 @@
-import {Point2D} from "$lib/area/shape.svelte";
+import {Point2D, Shape} from "$lib/area/shape.svelte";
 import type {Tool, ToolContext, ToolDescriptor} from "$lib/area/tool.svelte";
 
 const DRAG_THRESHOLD = 5;
 const POINT_SELECTION_RADIUS = 5;
+
+export const createRectTool: ToolDescriptor = {
+    id: "create-rect",
+    label: "Create rectangle",
+
+    isApplicable({}: ToolContext): boolean {
+        return true;
+    },
+
+    create(): Tool {
+        let start: Point2D;
+
+        return {
+            start: ({event}: ToolContext): void => {
+                start = new Point2D(event.offsetX, event.offsetY);
+            },
+            update({
+                event,
+                renderer,
+            }: ToolContext) {
+                if (!renderer) {
+                    return;
+                }
+
+                const click = new Point2D(event.offsetX, event.offsetY);
+
+                const w = click.x - start.x;
+                const h = click.y - start.y;
+
+                renderer.redraw();
+                renderer.drawBox(start.x, start.y, w, h);
+            },
+            end({
+                shapes,
+                selection,
+                event,
+            }: ToolContext) {
+                const click = new Point2D(event.offsetX, event.offsetY);
+
+                const w = click.x - start.x;
+                const h = click.y - start.y;
+
+                const shape = new Shape();
+                shape.addPoint(new Point2D(start.x, start.y));
+                shape.addPoint(new Point2D(start.x + w, start.y));
+                shape.addPoint(new Point2D(start.x + w, start.y + h));
+                shape.addPoint(new Point2D(start.x, start.y + h));
+
+                shapes.push(shape);
+                selection.selectShape(shape);
+            },
+        };
+    },
+};
 
 export const addPointTool: ToolDescriptor = {
     id: "add-point",

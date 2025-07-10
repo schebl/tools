@@ -1,7 +1,8 @@
 import type {Renderer} from "$lib/area/renderer";
-import {SelectionStore} from "$lib/area/shape.svelte";
+import {SelectionStore, Shape} from "$lib/area/shape.svelte";
 
 export interface ToolContext {
+    shapes: Shape[];
     selection: SelectionStore;
     event: PointerEvent;
     renderer: Renderer | null;

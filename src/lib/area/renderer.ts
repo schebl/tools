@@ -38,6 +38,12 @@ export class Renderer {
         this.ctx.restore();
     }
 
+    public drawBox(x: number, y: number, w: number, h: number) {
+        this.ctx.save();
+        this.ctx.strokeRect(x, y, w, h);
+        this.ctx.restore();
+    }
+
     private drawShape(shape: Shape) {
         this.ctx.save();
 
