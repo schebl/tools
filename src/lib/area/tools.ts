@@ -3,6 +3,7 @@ import type {Tool, ToolContext, ToolDescriptor} from "$lib/area/tool.svelte";
 
 const DRAG_THRESHOLD = 5;
 const POINT_SELECTION_RADIUS = 5;
+const ADD_POINT_RADIUS = 10;
 
 export const createRectTool: ToolDescriptor = {
     id: "create-rect",
@@ -84,7 +85,7 @@ export const addPointTool: ToolDescriptor = {
                     const current = selection.shape.points[i];
                     const next = selection.shape.points[nextI];
 
-                    if (hit.distanceToLine(current, next) < 10) {
+                    if (hit.distanceToLine(current, next) < ADD_POINT_RADIUS) {
                         selection.shape.insertAt(nextI, hit);
                         break;
                     }
