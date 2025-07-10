@@ -54,41 +54,50 @@
     <title>Area</title>
 </svelte:head>
 
-<div class="flex gap-2">
-    <div>
+<div class="flex gap-4">
+    <div class="flex flex-col gap-1">
         <p>Shapes</p>
 
-        {#each shapes as shape, i}
-            <div>
-                <label for="selection-shape-{i}">Shape {i + 1}</label>
+        <div>
+            {#each shapes as shape, i}
+                <div>
+                    <label for="selection-shape-{i}">Shape {i + 1}</label>
 
-                <input
-                    onclick={() => {selection.selectShape(shape)}}
-                    id="selection-shape-{i}"
-                    type="radio"
-                    name="selection"
-                >
-            </div>
-        {/each}
+                    <input
+                        onclick={() => {selection.selectShape(shape)}}
+                        id="selection-shape-{i}"
+                        type="radio"
+                        name="selection"
+                    >
+                </div>
+            {/each}
+        </div>
     </div>
 
-    <canvas {@attach canvasAttachment} class="rounded-sm border border-border"></canvas>
+    <canvas
+        {@attach canvasAttachment}
+        class="h-full rounded-sm border border-border"
+        height="400"
+        width="400"
+    ></canvas>
 
-    <div>
+    <div class="flex flex-col gap-1">
         <p>Tools</p>
 
-        {#each toolManager.getApplicable(getToolCtx()) as tool}
-            <div>
-                <label for="tool-{tool.id}">{tool.label}</label>
+        <div>
+            {#each toolManager.getApplicable(getToolCtx()) as tool}
+                <div>
+                    <label for="tool-{tool.id}">{tool.label}</label>
 
-                <input
-                    onclick={() => {toolManager.activate(tool.id, getToolCtx())}}
-                    id="tool-{tool.id}"
-                    type="radio"
-                    name="tool"
-                    checked={toolManager.isActive(tool.id)}
-                >
-            </div>
-        {/each}
+                    <input
+                        onclick={() => {toolManager.activate(tool.id, getToolCtx())}}
+                        id="tool-{tool.id}"
+                        type="radio"
+                        name="tool"
+                        checked={toolManager.isActive(tool.id)}
+                    >
+                </div>
+            {/each}
+        </div>
     </div>
 </div>
