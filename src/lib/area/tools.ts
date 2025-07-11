@@ -85,7 +85,7 @@ export const addPointTool: ToolDescriptor = {
                     const current = selection.shape.points[i];
                     const next = selection.shape.points[nextI];
 
-                    if (hit.distanceToLine(current, next) < ADD_POINT_RADIUS) {
+                    if (hit.anchor.distanceToBezierLine(current, next) < ADD_POINT_RADIUS) {
                         selection.shape.insertAt(nextI, hit);
                         break;
                     }
@@ -119,10 +119,8 @@ export const movePointTool: ToolDescriptor = {
             }: ToolContext): void => {
                 const click = new Point2D(event.offsetX, event.offsetY);
 
-                if (selection.point && didHit(
-                    selection.point.anchor,
-                    click,
-                )) {
+                if (selection.point && click.distanceToPoint(selection.point.anchor)
+                    <= POINT_SELECTION_RADIUS) {
                     movingPoint = selection.point;
                 }
             },
@@ -188,7 +186,7 @@ export const selectPointTool: ToolDescriptor = {
 
                 if (!isDragging) {
                     for (const point of selection.shape?.points ?? []) {
-                        if (didHit(point.anchor, end)) {
+                        if (end.distanceToPoint(point.anchor) <= POINT_SELECTION_RADIUS) {
                             selection.selectPoint(point);
                             break;
                         }
@@ -222,10 +220,3 @@ export const selectPointTool: ToolDescriptor = {
         };
     },
 };
-
-function didHit(point: Point2D, hit: Point2D): boolean {
-    const dx = point.x - hit.x;
-    const dy = point.y - hit.y;
-
-    return Math.hypot(dx, dy) <= POINT_SELECTION_RADIUS;
-}

@@ -1,4 +1,4 @@
-import {BezierPoint, SelectionStore, type Shape} from "$lib/area/shape.svelte";
+import {BezierPoint, Point2D, SelectionStore, type Shape} from "$lib/area/shape.svelte";
 
 const POINT_SIZE = 4;
 const SELECTED_POINT_SIZE = 6;
@@ -44,6 +44,16 @@ export class Renderer {
         this.ctx.restore();
     }
 
+    public drawEllipse(x: number, y: number, w: number, h: number) {
+        const center = new Point2D(x + w / 2, y + h / 2);
+
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.ellipse(center.x, center.y, Math.abs(w / 2), Math.abs(h / 2), 0, 0, Math.PI * 2);
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
     private drawShape(shape: Shape) {
         this.ctx.save();
 
@@ -62,9 +72,16 @@ export class Renderer {
             if (i === 0) {
                 this.ctx.moveTo(current.anchor.x, current.anchor.y);
             }
-            this.ctx.lineTo(next.anchor.x, next.anchor.y);
 
             this.drawPoint(current, isShapeSelected);
+            this.ctx.bezierCurveTo(
+                current.handleOut.x,
+                current.handleOut.y,
+                next.handleIn.x,
+                next.handleIn.y,
+                next.anchor.x,
+                next.anchor.y,
+            );
         }
 
         this.ctx.stroke();
@@ -80,6 +97,27 @@ export class Renderer {
                     SELECTED_POINT_SIZE,
                     SELECTED_POINT_SIZE,
                 );
+
+                this.ctx.lineTo(point.handleIn.x, point.handleIn.y);
+                this.ctx.fillRect(
+                    point.handleIn.x - SELECTED_POINT_SIZE / 2,
+                    point.handleIn.y - SELECTED_POINT_SIZE / 2,
+                    SELECTED_POINT_SIZE,
+                    SELECTED_POINT_SIZE,
+                );
+
+                this.ctx.moveTo(point.anchor.x, point.anchor.y);
+
+                this.ctx.lineTo(point.handleOut.x, point.handleOut.y);
+                this.ctx.fillRect(
+                    point.handleOut.x - SELECTED_POINT_SIZE / 2,
+                    point.handleOut.y - SELECTED_POINT_SIZE / 2,
+                    SELECTED_POINT_SIZE,
+                    SELECTED_POINT_SIZE,
+                );
+
+                this.ctx.moveTo(point.anchor.x, point.anchor.y);
+
                 return;
             }
 

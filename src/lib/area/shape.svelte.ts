@@ -6,6 +6,50 @@ export class Point2D {
         this.x = $state(x);
         this.y = $state(y);
     }
+
+    public distanceToPoint(point: Point2D): number {
+        const dx = point.x - this.x;
+        const dy = point.y - this.y;
+
+        return Math.hypot(dx, dy);
+    }
+
+    public distanceToBezierLine(start: BezierPoint, end: BezierPoint): number {
+        const steps = 1000;
+
+        let minDistSquare = Infinity;
+
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const bezier = this.bezierAt(t, start, end);
+
+            const dx = this.x - bezier.x;
+            const dy = this.y - bezier.y;
+
+            const distSquare = dx ** 2 + dy ** 2;
+            if (distSquare < minDistSquare) {
+                minDistSquare = distSquare;
+            }
+        }
+
+        console.log(minDistSquare);
+        return Math.sqrt(minDistSquare);
+    }
+
+    private bezierAt(t: number, start: BezierPoint, end: BezierPoint): Point2D {
+        const u = 1 - t;
+        const tt = t ** 2;
+        const uu = u ** 2;
+        const ttt = t ** 3;
+        const uuu = u ** 3;
+
+        return new Point2D(
+            uuu * start.anchor.x + 3 * uu * t * start.handleOut.x + 3 * u * tt
+            * end.handleIn.x + ttt * end.anchor.x,
+            uuu * start.anchor.y + 3 * uu * t * start.handleOut.y + 3 * u * tt * end.handleIn.y
+            + ttt * end.anchor.y,
+        );
+    }
 }
 
 export class BezierPoint {
@@ -20,47 +64,15 @@ export class BezierPoint {
     }
 
     public static fromXY(x: number, y: number): BezierPoint {
-        return new BezierPoint(
-            new Point2D(x, y),
-            new Point2D(x, y),
-            new Point2D(x, y),
-        );
+        return new BezierPoint(new Point2D(x, y), new Point2D(x, y), new Point2D(x, y));
     }
 
-    public distanceToLine(start: BezierPoint, end: BezierPoint): number {
-        const vectorToPoint = new Point2D(
-            this.anchor.x - start.anchor.x,
-            this.anchor.y - start.anchor.y,
+    public static fromPoint(point: Point2D): BezierPoint {
+        return new BezierPoint(
+            new Point2D(point.x, point.y),
+            new Point2D(point.x, point.y),
+            new Point2D(point.x, point.y),
         );
-        const lineVector = new Point2D(
-            end.anchor.x - start.anchor.x,
-            end.anchor.y - start.anchor.y,
-        );
-
-        const dotProduct = vectorToPoint.x * lineVector.x + vectorToPoint.y * lineVector.y;
-        const lineLenSquared = lineVector.x ** 2 + lineVector.y ** 2;
-
-        let projection = -1;
-        if (lineLenSquared !== 0) {
-            projection = dotProduct / lineLenSquared;
-        }
-
-        let closest = new Point2D(0, 0);
-        if (projection < 0) {
-            closest.x = start.anchor.x;
-            closest.y = start.anchor.y;
-        } else if (projection > 1) {
-            closest.x = end.anchor.x;
-            closest.y = end.anchor.y;
-        } else {
-            closest.x = start.anchor.x + projection * lineVector.x;
-            closest.y = start.anchor.y + projection * lineVector.y;
-        }
-
-        const dx = this.anchor.x - closest.x;
-        const dy = this.anchor.y - closest.y;
-
-        return Math.hypot(dx, dy);
     }
 }
 
