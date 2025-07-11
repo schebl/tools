@@ -1,4 +1,6 @@
-import {Point2D, Vector} from "$lib/area/geometry.svelte";
+import {bezierLineArea, Point2D, Vector} from "$lib/area/geometry.svelte";
+
+const BEZIER_STEPS = 1000;
 
 export class BezierPoint {
     public anchor: Point2D;
@@ -43,6 +45,40 @@ export class Shape {
 
     public hasPoint(point: BezierPoint): boolean {
         return !!this.points.find(p => p === point);
+    }
+
+    public area(): number {
+        let area = 0;
+
+        console.log();
+        for (let i = 0; i < this.points.length; i++) {
+            const current = this.points[i];
+            const next = this.points[(i + 1) % this.points.length];
+
+            area += bezierLineArea(current, next, BEZIER_STEPS);
+        }
+
+        return Math.abs(area);
+    }
+}
+
+export class ShapeStore {
+    private shapes: Shape[] = $state([]);
+
+    public all(): Shape[] {
+        return this.shapes;
+    }
+
+    public add(shape: Shape): void {
+        this.shapes.push(shape);
+    }
+
+    public area(): number {
+        let area = 0;
+        for (const shape of this.shapes) {
+            area += shape.area();
+        }
+        return area;
     }
 }
 

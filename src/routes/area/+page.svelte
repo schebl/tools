@@ -1,6 +1,6 @@
 <script lang="ts">
     import {Renderer} from "$lib/area/renderer";
-    import {SelectionStore, Shape} from "$lib/area/shape.svelte";
+    import {SelectionStore, ShapeStore} from "$lib/area/shape.svelte";
     import {type ToolContext, ToolManager} from "$lib/area/tool.svelte";
     import {
         addPointTool,
@@ -12,16 +12,18 @@
     } from "$lib/area/tools";
     import type {Attachment} from "svelte/attachments";
 
-    const shapes = $state<Shape[]>([]);
+    const shapes = new ShapeStore();
     const selection = new SelectionStore();
 
     const toolManager = new ToolManager();
     toolManager.register(createRectTool, createEllipseTool);
     toolManager.register(addPointTool, moveAnchorTool, moveControlTool, selectPointTool);
 
+    let totalArea = $state(0);
+
     function getToolCtx(renderer?: Renderer): Omit<ToolContext, "event"> {
         return {
-            shapes: shapes,
+            shapes: shapes.all(),
             selection: selection,
             renderer: renderer ?? null,
         };
@@ -32,7 +34,7 @@
         if (!ctx) {
             throw new Error("Unable to get canvas drawing context");
         }
-        const renderer = new Renderer(ctx, selection, shapes);
+        const renderer = new Renderer(ctx, selection, shapes.all());
 
         const handlePointerDown = (event: PointerEvent) => {
             toolManager.handleEvent(event, getToolCtx(renderer));
@@ -63,10 +65,22 @@
 
 <div class="flex gap-4">
     <div class="flex flex-col gap-1">
+        <div>
+            <p>Total area</p>
+
+            <p>{totalArea}</p>
+        </div>
+
+        <button onclick={() => {totalArea = shapes.area()}}>
+            Calculate
+        </button>
+    </div>
+
+    <div class="flex flex-col gap-1">
         <p>Shapes</p>
 
         <div>
-            {#each shapes as shape, i}
+            {#each shapes.all() as shape, i}
                 <div>
                     <label for="selection-shape-{i}">Shape {i + 1}</label>
 

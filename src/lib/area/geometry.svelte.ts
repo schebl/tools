@@ -1,7 +1,5 @@
 import {BezierPoint} from "$lib/area/shape.svelte";
 
-const BEZIER_STEPS = 1000;
-
 export class Vector {
     public dx: number;
     public dy: number;
@@ -41,12 +39,16 @@ export class Point2D {
         return this.vectorTo(point).distance();
     }
 
-    public distanceToBezierLine(start: BezierPoint, end: BezierPoint): number {
+    public distanceToBezierLine(
+        start: BezierPoint,
+        end: BezierPoint,
+        steps: number = 1000,
+    ): number {
         let minDistSquare = Infinity;
 
-        for (let i = 0; i <= BEZIER_STEPS; i++) {
-            const t = i / BEZIER_STEPS;
-            const bezier = this.bezierAt(t, start, end);
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const bezier = bezierAt(t, start, end);
 
             const vec = this.vectorTo(bezier);
 
@@ -58,19 +60,43 @@ export class Point2D {
 
         return Math.sqrt(minDistSquare);
     }
+}
 
-    private bezierAt(t: number, start: BezierPoint, end: BezierPoint): Point2D {
+export function bezierLineArea(start: BezierPoint, end: BezierPoint, steps: number = 1000): number {
+    let area = 0;
+
+    const dt = 1 / steps;
+
+    for (let step = 0; step < steps; step++) {
+        const t = step * dt;
         const u = 1 - t;
         const tt = t ** 2;
         const uu = u ** 2;
-        const ttt = t ** 3;
-        const uuu = u ** 3;
 
-        return new Point2D(
-            uuu * start.anchor.x + 3 * uu * t * start.handleOutPoint().x + 3 * u * tt
-            * end.handleInPoint().x + ttt * end.anchor.x,
-            uuu * start.anchor.y + 3 * uu * t * start.handleOutPoint().y + 3 * u * tt
-            * end.handleInPoint().y + ttt * end.anchor.y,
-        );
+        const bezier = bezierAt(t, start, end);
+
+        const dx = -3 * uu * start.anchor.x + 3 * (uu - 2 * u * t) * start.handleOutPoint().x + 3
+            * (2 * u * t - tt) * end.handleInPoint().x + 3 * tt * end.anchor.x;
+        const dy = -3 * uu * start.anchor.y + 3 * (uu - 2 * u * t) * start.handleOutPoint().y + 3
+            * (2 * u * t - tt) * end.handleInPoint().y + 3 * tt * end.anchor.y;
+
+        area += (bezier.x * dy - bezier.y * dx) * dt;
     }
+
+    return area / 2;
+}
+
+function bezierAt(t: number, start: BezierPoint, end: BezierPoint): Point2D {
+    const u = 1 - t;
+    const tt = t ** 2;
+    const uu = u ** 2;
+    const ttt = t ** 3;
+    const uuu = u ** 3;
+
+    return new Point2D(
+        uuu * start.anchor.x + 3 * uu * t * start.handleOutPoint().x + 3 * u * tt
+        * end.handleInPoint().x + ttt * end.anchor.x,
+        uuu * start.anchor.y + 3 * uu * t * start.handleOutPoint().y + 3 * u * tt
+        * end.handleInPoint().y + ttt * end.anchor.y,
+    );
 }
