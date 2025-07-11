@@ -6,7 +6,8 @@
         addPointTool,
         createEllipseTool,
         createRectTool,
-        movePointTool,
+        moveAnchorTool,
+        moveControlTool,
         selectPointTool,
     } from "$lib/area/tools";
     import type {Attachment} from "svelte/attachments";
@@ -16,7 +17,7 @@
 
     const toolManager = new ToolManager();
     toolManager.register(createRectTool, createEllipseTool);
-    toolManager.register(addPointTool, movePointTool, selectPointTool);
+    toolManager.register(addPointTool, moveAnchorTool, moveControlTool, selectPointTool);
 
     function getToolCtx(renderer?: Renderer): Omit<ToolContext, "event"> {
         return {

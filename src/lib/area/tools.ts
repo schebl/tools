@@ -1,4 +1,4 @@
-import {BezierPoint, Point2D, Shape} from "$lib/area/shape.svelte";
+import {BezierPoint, Point2D, Shape, Vector} from "$lib/area/shape.svelte";
 import type {Tool, ToolContext, ToolDescriptor} from "$lib/area/tool.svelte";
 
 const DRAG_THRESHOLD = 5;
@@ -114,13 +114,17 @@ export const createEllipseTool: ToolDescriptor = {
                     sizeX: number,
                     sizeY: number,
                 ) => {
-                    shape.addPoint(new BezierPoint(new Point2D(posX, posY), {
-                        dx: sizeX * -ELLIPSE_CONTROL_DISTANCE / 2,
-                        dy: sizeY * -ELLIPSE_CONTROL_DISTANCE / 2,
-                    }, {
-                        dx: sizeX * ELLIPSE_CONTROL_DISTANCE / 2,
-                        dy: sizeY * ELLIPSE_CONTROL_DISTANCE / 2,
-                    }));
+                    shape.addPoint(new BezierPoint(
+                        new Point2D(posX, posY),
+                        new Vector(
+                            sizeX * -ELLIPSE_CONTROL_DISTANCE / 2,
+                            sizeY * -ELLIPSE_CONTROL_DISTANCE / 2,
+                        ),
+                        new Vector(
+                            sizeX * ELLIPSE_CONTROL_DISTANCE / 2,
+                            sizeY * ELLIPSE_CONTROL_DISTANCE / 2,
+                        ),
+                    ));
                 };
                 addEllipseSegment(center.x, start.y, w, 0);
                 addEllipseSegment(start.x + w, center.y, 0, h);
@@ -176,16 +180,16 @@ export const addPointTool: ToolDescriptor = {
     },
 };
 
-export const movePointTool: ToolDescriptor = {
-    id: "move-point",
-    label: "Move point",
+export const moveAnchorTool: ToolDescriptor = {
+    id: "move-anchor",
+    label: "Move anchor",
 
     isApplicable({selection}: ToolContext): boolean {
         return !!selection.shape && !!selection.point;
     },
 
     create(): Tool {
-        let movingPoint: BezierPoint;
+        let movingAnchor: Point2D;
 
         return {
             start: ({
@@ -196,16 +200,70 @@ export const movePointTool: ToolDescriptor = {
 
                 if (selection.point && click.distanceToPoint(selection.point.anchor)
                     <= POINT_SELECTION_RADIUS) {
-                    movingPoint = selection.point;
+                    movingAnchor = selection.point.anchor;
                 }
             },
             update({event}: ToolContext) {
-                if (!movingPoint) {
+                if (!movingAnchor) {
                     return;
                 }
 
-                movingPoint.anchor.x = event.offsetX;
-                movingPoint.anchor.y = event.offsetY;
+                movingAnchor.x = event.offsetX;
+                movingAnchor.y = event.offsetY;
+            },
+            end({}: ToolContext) {
+            },
+        };
+    },
+};
+
+export const moveControlTool: ToolDescriptor = {
+    id: "move-control",
+    label: "Move control",
+
+    isApplicable({selection}: ToolContext): boolean {
+        return !!selection.shape && !!selection.point;
+    },
+
+    create(): Tool {
+        let start: Point2D;
+        let movingControl: Vector;
+        let oldControl: Vector;
+
+        return {
+            start: ({
+                selection,
+                event,
+            }: ToolContext): void => {
+                if (!selection.point) {
+                    return;
+                }
+
+                start = new Point2D(event.offsetX, event.offsetY);
+
+                if (start.distanceToPoint(selection.point.handleInPoint())
+                    <= POINT_SELECTION_RADIUS) {
+                    movingControl = selection.point.handleIn;
+                }
+                if (start.distanceToPoint(selection.point.handleOutPoint())
+                    <= POINT_SELECTION_RADIUS) {
+                    movingControl = selection.point.handleOut;
+                }
+
+                if (movingControl) {
+                    oldControl = new Vector(movingControl.dx, movingControl.dy);
+                }
+            },
+            update({event}: ToolContext) {
+                if (!movingControl || !oldControl) {
+                    return;
+                }
+
+                const click = new Point2D(event.offsetX, event.offsetY);
+                const vec = start.vectorTo(click);
+
+                movingControl.dx = oldControl.dx + vec.dx;
+                movingControl.dy = oldControl.dy + vec.dy;
             },
             end({}: ToolContext) {
             },

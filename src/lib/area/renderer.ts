@@ -89,44 +89,45 @@ export class Renderer {
     }
 
     private drawPoint(point: BezierPoint, isParentSelected: boolean) {
-        if (isParentSelected) {
-            if (this.selection.point === point) {
-                this.ctx.fillRect(
-                    point.anchor.x - SELECTED_POINT_SIZE / 2,
-                    point.anchor.y - SELECTED_POINT_SIZE / 2,
-                    SELECTED_POINT_SIZE,
-                    SELECTED_POINT_SIZE,
-                );
+        if (!isParentSelected) {
+            return;
+        }
 
-                this.ctx.lineTo(point.handleInPoint().x, point.handleInPoint().y);
-                this.ctx.fillRect(
-                    point.handleInPoint().x - SELECTED_POINT_SIZE / 2,
-                    point.handleInPoint().y - SELECTED_POINT_SIZE / 2,
-                    SELECTED_POINT_SIZE,
-                    SELECTED_POINT_SIZE,
-                );
-
-                this.ctx.moveTo(point.anchor.x, point.anchor.y);
-
-                this.ctx.lineTo(point.handleOutPoint().x, point.handleOutPoint().y);
-                this.ctx.fillRect(
-                    point.handleOutPoint().x - SELECTED_POINT_SIZE / 2,
-                    point.handleOutPoint().y - SELECTED_POINT_SIZE / 2,
-                    SELECTED_POINT_SIZE,
-                    SELECTED_POINT_SIZE,
-                );
-
-                this.ctx.moveTo(point.anchor.x, point.anchor.y);
-
-                return;
-            }
-
+        if (this.selection.point !== point) {
             this.ctx.fillRect(
                 point.anchor.x - POINT_SIZE / 2,
                 point.anchor.y - POINT_SIZE / 2,
                 POINT_SIZE,
                 POINT_SIZE,
             );
+
+            return;
         }
+
+        this.ctx.fillRect(
+            point.anchor.x - SELECTED_POINT_SIZE / 2,
+            point.anchor.y - SELECTED_POINT_SIZE / 2,
+            SELECTED_POINT_SIZE,
+            SELECTED_POINT_SIZE,
+        );
+
+        this.ctx.fillRect(
+            point.handleInPoint().x - SELECTED_POINT_SIZE / 2,
+            point.handleInPoint().y - SELECTED_POINT_SIZE / 2,
+            SELECTED_POINT_SIZE,
+            SELECTED_POINT_SIZE,
+        );
+
+        this.ctx.fillRect(
+            point.handleOutPoint().x - SELECTED_POINT_SIZE / 2,
+            point.handleOutPoint().y - SELECTED_POINT_SIZE / 2,
+            SELECTED_POINT_SIZE,
+            SELECTED_POINT_SIZE,
+        );
+
+        this.ctx.lineTo(point.handleInPoint().x, point.handleInPoint().y);
+        this.ctx.moveTo(point.anchor.x, point.anchor.y);
+        this.ctx.lineTo(point.handleOutPoint().x, point.handleOutPoint().y);
+        this.ctx.moveTo(point.anchor.x, point.anchor.y);
     }
 }
