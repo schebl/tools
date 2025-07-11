@@ -5,6 +5,8 @@ const DRAG_THRESHOLD = 5;
 const POINT_SELECTION_RADIUS = 5;
 const ADD_POINT_RADIUS = 10;
 
+const ELLIPSE_CONTROL_DISTANCE = 0.55191502449;
+
 export const createRectTool: ToolDescriptor = {
     id: "create-rect",
     label: "Create rectangle",
@@ -51,6 +53,81 @@ export const createRectTool: ToolDescriptor = {
                 shape.addPoint(BezierPoint.fromXY(start.x + w, start.y));
                 shape.addPoint(BezierPoint.fromXY(start.x + w, start.y + h));
                 shape.addPoint(BezierPoint.fromXY(start.x, start.y + h));
+
+                shapes.push(shape);
+                selection.selectShape(shape);
+            },
+        };
+    },
+};
+
+export const createEllipseTool: ToolDescriptor = {
+    id: "create-ellipse",
+    label: "Create ellipse",
+
+    isApplicable({}: ToolContext): boolean {
+        return true;
+    },
+
+    create(): Tool {
+        let start: Point2D;
+
+        return {
+            start: ({event}: ToolContext): void => {
+                start = new Point2D(event.offsetX, event.offsetY);
+            },
+            update({
+                event,
+                renderer,
+            }: ToolContext) {
+                if (!renderer) {
+                    return;
+                }
+
+                const click = new Point2D(event.offsetX, event.offsetY);
+
+                const w = click.x - start.x;
+                const h = click.y - start.y;
+
+                renderer.redraw();
+                renderer.drawEllipse(start.x, start.y, w, h);
+            },
+            end({
+                shapes,
+                selection,
+                event,
+            }: ToolContext) {
+                const click = new Point2D(event.offsetX, event.offsetY);
+
+                const w = click.x - start.x;
+                const h = click.y - start.y;
+
+                const center = {
+                    x: start.x + w / 2,
+                    y: start.y + h / 2,
+                };
+
+                const shape = new Shape();
+                shape.addPoint(new BezierPoint(
+                    new Point2D(center.x, start.y),
+                    new Point2D(center.x - ELLIPSE_CONTROL_DISTANCE * w / 2, start.y),
+                    new Point2D(center.x + ELLIPSE_CONTROL_DISTANCE * w / 2, start.y),
+                ));
+                shape.addPoint(new BezierPoint(
+                    new Point2D(start.x + w, center.y),
+                    new Point2D(start.x + w, center.y - ELLIPSE_CONTROL_DISTANCE * h / 2),
+                    new Point2D(start.x + w, center.y + ELLIPSE_CONTROL_DISTANCE * h / 2),
+                ));
+                shape.addPoint(new BezierPoint(
+                    new Point2D(center.x, start.y + h),
+                    new Point2D(center.x + ELLIPSE_CONTROL_DISTANCE * w / 2, start.y + h),
+                    new Point2D(center.x - ELLIPSE_CONTROL_DISTANCE * w / 2, start.y + h),
+                ));
+                shape.addPoint(new BezierPoint(
+                    new Point2D(start.x, center.y),
+                    new Point2D(start.x, center.y + ELLIPSE_CONTROL_DISTANCE * h / 2),
+                    new Point2D(start.x, center.y - ELLIPSE_CONTROL_DISTANCE * h / 2),
+                ));
 
                 shapes.push(shape);
                 selection.selectShape(shape);

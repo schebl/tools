@@ -2,14 +2,20 @@
     import {Renderer} from "$lib/area/renderer";
     import {SelectionStore, Shape} from "$lib/area/shape.svelte";
     import {type ToolContext, ToolManager} from "$lib/area/tool.svelte";
-    import {addPointTool, createRectTool, movePointTool, selectPointTool} from "$lib/area/tools";
+    import {
+        addPointTool,
+        createEllipseTool,
+        createRectTool,
+        movePointTool,
+        selectPointTool,
+    } from "$lib/area/tools";
     import type {Attachment} from "svelte/attachments";
 
     const shapes = $state<Shape[]>([]);
     const selection = new SelectionStore();
 
     const toolManager = new ToolManager();
-    toolManager.register(createRectTool);
+    toolManager.register(createRectTool, createEllipseTool);
     toolManager.register(addPointTool, movePointTool, selectPointTool);
 
     function getToolCtx(renderer?: Renderer): Omit<ToolContext, "event"> {
