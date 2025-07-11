@@ -1,4 +1,5 @@
-import {BezierPoint, Point2D, SelectionStore, type Shape} from "$lib/area/shape.svelte";
+import {Point2D} from "$lib/area/geometry.svelte";
+import {BezierPoint, SelectionStore, type Shape} from "$lib/area/shape.svelte";
 
 const POINT_SIZE = 4;
 const SELECTED_POINT_SIZE = 6;

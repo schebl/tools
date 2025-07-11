@@ -1,4 +1,5 @@
-import {BezierPoint, Point2D, Shape, Vector} from "$lib/area/shape.svelte";
+import {Point2D, Vector} from "$lib/area/geometry.svelte";
+import {BezierPoint, Shape} from "$lib/area/shape.svelte";
 import type {Tool, ToolContext, ToolDescriptor} from "$lib/area/tool.svelte";
 
 const DRAG_THRESHOLD = 5;
