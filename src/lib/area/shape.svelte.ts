@@ -20,12 +20,12 @@ export class BezierPoint {
     }
 
     public handleOutPoint(): Point2D {
-        const handleOutPoint = this.anchor.addVector(this.handleOut);
+        const handleOutPoint = this.anchor.add(this.handleOut);
         return new Point2D(handleOutPoint.x, handleOutPoint.y);
     }
 
     public handleInPoint(): Point2D {
-        let handleInPoint = this.anchor.addVector(this.handleIn);
+        const handleInPoint = this.anchor.add(this.handleIn);
         return new Point2D(handleInPoint.x, handleInPoint.y);
     }
 }

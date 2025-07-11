@@ -1,5 +1,7 @@
 import {BezierPoint} from "$lib/area/shape.svelte";
 
+const BEZIER_STEPS = 1000;
+
 export class Vector {
     public dx: number;
     public dy: number;
@@ -7,6 +9,14 @@ export class Vector {
     public constructor(dx: number, dy: number) {
         this.dx = $state(dx);
         this.dy = $state(dy);
+    }
+
+    public add(vector: Vector): Vector {
+        return new Vector(this.dx + vector.dx, this.dy + vector.dy);
+    }
+
+    public distance(): number {
+        return Math.hypot(this.dx, this.dy);
     }
 }
 
@@ -19,7 +29,7 @@ export class Point2D {
         this.y = $state(y);
     }
 
-    public addVector(vector: Vector): Point2D {
+    public add(vector: Vector): Point2D {
         return new Point2D(this.x + vector.dx, this.y + vector.dy);
     }
 
@@ -27,18 +37,15 @@ export class Point2D {
         return new Vector(point.x - this.x, point.y - this.y);
     }
 
-    public distanceToPoint(point: Point2D): number {
-        const vec = this.vectorTo(point);
-        return Math.hypot(vec.dx, vec.dy);
+    public distanceTo(point: Point2D): number {
+        return this.vectorTo(point).distance();
     }
 
     public distanceToBezierLine(start: BezierPoint, end: BezierPoint): number {
-        const steps = 1000;
-
         let minDistSquare = Infinity;
 
-        for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
+        for (let i = 0; i <= BEZIER_STEPS; i++) {
+            const t = i / BEZIER_STEPS;
             const bezier = this.bezierAt(t, start, end);
 
             const vec = this.vectorTo(bezier);
