@@ -14,6 +14,10 @@ export class Point2D {
         return Math.hypot(dx, dy);
     }
 
+    public addVector(vector: Vector): Point2D {
+        return new Point2D(this.x + vector.dx, this.y + vector.dy);
+    }
+
     public distanceToBezierLine(start: BezierPoint, end: BezierPoint): number {
         const steps = 1000;
 
@@ -44,35 +48,58 @@ export class Point2D {
         const uuu = u ** 3;
 
         return new Point2D(
-            uuu * start.anchor.x + 3 * uu * t * start.handleOut.x + 3 * u * tt
-            * end.handleIn.x + ttt * end.anchor.x,
-            uuu * start.anchor.y + 3 * uu * t * start.handleOut.y + 3 * u * tt * end.handleIn.y
-            + ttt * end.anchor.y,
+            uuu * start.anchor.x + 3 * uu * t * start.handleOutPoint().x + 3 * u * tt
+            * end.handleInPoint().x + ttt * end.anchor.x,
+            uuu * start.anchor.y + 3 * uu * t * start.handleOutPoint().y + 3 * u * tt
+            * end.handleInPoint().y + ttt * end.anchor.y,
         );
     }
 }
 
+export interface Vector {
+    dx: number;
+    dy: number;
+}
+
 export class BezierPoint {
     public anchor: Point2D;
-    public handleIn: Point2D;
-    public handleOut: Point2D;
+    public handleOut: Vector;
+    public handleIn: Vector;
 
-    public constructor(position: Point2D, handleIn: Point2D, handleOut: Point2D) {
+    public constructor(position: Point2D, handleIn: Vector, handleOut: Vector) {
         this.anchor = position;
         this.handleIn = handleIn;
         this.handleOut = handleOut;
     }
 
     public static fromXY(x: number, y: number): BezierPoint {
-        return new BezierPoint(new Point2D(x, y), new Point2D(x, y), new Point2D(x, y));
+        return new BezierPoint(new Point2D(x, y), {
+            dx: 0,
+            dy: 0,
+        }, {
+            dx: 0,
+            dy: 0,
+        });
     }
 
     public static fromPoint(point: Point2D): BezierPoint {
-        return new BezierPoint(
-            new Point2D(point.x, point.y),
-            new Point2D(point.x, point.y),
-            new Point2D(point.x, point.y),
-        );
+        return new BezierPoint(new Point2D(point.x, point.y), {
+            dx: 0,
+            dy: 0,
+        }, {
+            dx: 0,
+            dy: 0,
+        });
+    }
+
+    public handleOutPoint(): Point2D {
+        const handleOutPoint = this.anchor.addVector(this.handleOut);
+        return new Point2D(handleOutPoint.x, handleOutPoint.y);
+    }
+
+    public handleInPoint(): Point2D {
+        let handleInPoint = this.anchor.addVector(this.handleIn);
+        return new Point2D(handleInPoint.x, handleInPoint.y);
     }
 }
 

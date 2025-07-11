@@ -75,10 +75,10 @@ export class Renderer {
 
             this.drawPoint(current, isShapeSelected);
             this.ctx.bezierCurveTo(
-                current.handleOut.x,
-                current.handleOut.y,
-                next.handleIn.x,
-                next.handleIn.y,
+                current.handleOutPoint().x,
+                current.handleOutPoint().y,
+                next.handleInPoint().x,
+                next.handleInPoint().y,
                 next.anchor.x,
                 next.anchor.y,
             );
@@ -98,20 +98,20 @@ export class Renderer {
                     SELECTED_POINT_SIZE,
                 );
 
-                this.ctx.lineTo(point.handleIn.x, point.handleIn.y);
+                this.ctx.lineTo(point.handleInPoint().x, point.handleInPoint().y);
                 this.ctx.fillRect(
-                    point.handleIn.x - SELECTED_POINT_SIZE / 2,
-                    point.handleIn.y - SELECTED_POINT_SIZE / 2,
+                    point.handleInPoint().x - SELECTED_POINT_SIZE / 2,
+                    point.handleInPoint().y - SELECTED_POINT_SIZE / 2,
                     SELECTED_POINT_SIZE,
                     SELECTED_POINT_SIZE,
                 );
 
                 this.ctx.moveTo(point.anchor.x, point.anchor.y);
 
-                this.ctx.lineTo(point.handleOut.x, point.handleOut.y);
+                this.ctx.lineTo(point.handleOutPoint().x, point.handleOutPoint().y);
                 this.ctx.fillRect(
-                    point.handleOut.x - SELECTED_POINT_SIZE / 2,
-                    point.handleOut.y - SELECTED_POINT_SIZE / 2,
+                    point.handleOutPoint().x - SELECTED_POINT_SIZE / 2,
+                    point.handleOutPoint().y - SELECTED_POINT_SIZE / 2,
                     SELECTED_POINT_SIZE,
                     SELECTED_POINT_SIZE,
                 );

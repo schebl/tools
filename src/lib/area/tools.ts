@@ -108,26 +108,24 @@ export const createEllipseTool: ToolDescriptor = {
                 };
 
                 const shape = new Shape();
-                shape.addPoint(new BezierPoint(
-                    new Point2D(center.x, start.y),
-                    new Point2D(center.x - ELLIPSE_CONTROL_DISTANCE * w / 2, start.y),
-                    new Point2D(center.x + ELLIPSE_CONTROL_DISTANCE * w / 2, start.y),
-                ));
-                shape.addPoint(new BezierPoint(
-                    new Point2D(start.x + w, center.y),
-                    new Point2D(start.x + w, center.y - ELLIPSE_CONTROL_DISTANCE * h / 2),
-                    new Point2D(start.x + w, center.y + ELLIPSE_CONTROL_DISTANCE * h / 2),
-                ));
-                shape.addPoint(new BezierPoint(
-                    new Point2D(center.x, start.y + h),
-                    new Point2D(center.x + ELLIPSE_CONTROL_DISTANCE * w / 2, start.y + h),
-                    new Point2D(center.x - ELLIPSE_CONTROL_DISTANCE * w / 2, start.y + h),
-                ));
-                shape.addPoint(new BezierPoint(
-                    new Point2D(start.x, center.y),
-                    new Point2D(start.x, center.y + ELLIPSE_CONTROL_DISTANCE * h / 2),
-                    new Point2D(start.x, center.y - ELLIPSE_CONTROL_DISTANCE * h / 2),
-                ));
+                const addEllipseSegment = (
+                    posX: number,
+                    posY: number,
+                    sizeX: number,
+                    sizeY: number,
+                ) => {
+                    shape.addPoint(new BezierPoint(new Point2D(posX, posY), {
+                        dx: sizeX * -ELLIPSE_CONTROL_DISTANCE / 2,
+                        dy: sizeY * -ELLIPSE_CONTROL_DISTANCE / 2,
+                    }, {
+                        dx: sizeX * ELLIPSE_CONTROL_DISTANCE / 2,
+                        dy: sizeY * ELLIPSE_CONTROL_DISTANCE / 2,
+                    }));
+                };
+                addEllipseSegment(center.x, start.y, w, 0);
+                addEllipseSegment(start.x + w, center.y, 0, h);
+                addEllipseSegment(center.x, start.y + h, -w, 0);
+                addEllipseSegment(start.x, center.y, 0, -h);
 
                 shapes.push(shape);
                 selection.selectShape(shape);
