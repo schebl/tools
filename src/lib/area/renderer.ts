@@ -9,27 +9,122 @@ const DEFAULT_STYLE = "#0a0a0a";
 
 const LINE_DASH = [8, 4];
 
-export class Renderer {
-    private ctx: CanvasRenderingContext2D;
-    private selection: SelectionStore;
-    private readonly shapes: Shape[];
+export interface Drawable {
+    draw(ctx: CanvasRenderingContext2D, selection: SelectionStore): void;
+}
 
-    public constructor(ctx: CanvasRenderingContext2D, selection: SelectionStore, shapes: Shape[]) {
+export class ShapeDrawable implements Drawable {
+    private readonly shape: Shape;
+
+    public constructor(shape: Shape) {
+        this.shape = shape;
+    }
+
+    public draw(ctx: CanvasRenderingContext2D, selection: SelectionStore) {
+        const isShapeSelected = selection.shape === this.shape;
+        if (isShapeSelected) {
+            ctx.strokeStyle = SELECTED_STYLE;
+            ctx.fillStyle = SELECTED_STYLE;
+        }
+
+        ctx.beginPath();
+
+        for (let i = 0; i < this.shape.points.length; i++) {
+            const current = this.shape.points[i];
+            const next = this.shape.points[(i + 1) % this.shape.points.length];
+
+            if (i === 0) {
+                ctx.moveTo(current.anchor.x, current.anchor.y);
+            }
+
+            this.drawPoint(ctx, selection, current, isShapeSelected);
+            ctx.bezierCurveTo(
+                current.handleOutPoint().x,
+                current.handleOutPoint().y,
+                next.handleInPoint().x,
+                next.handleInPoint().y,
+                next.anchor.x,
+                next.anchor.y,
+            );
+        }
+
+        ctx.stroke();
+    }
+
+    private drawPoint(
+        ctx: CanvasRenderingContext2D,
+        selection: SelectionStore,
+        point: BezierPoint,
+        isParentSelected: boolean,
+    ) {
+        if (!isParentSelected) {
+            return;
+        }
+
+        if (selection.point !== point) {
+            ctx.fillRect(
+                point.anchor.x - POINT_SIZE / 2,
+                point.anchor.y - POINT_SIZE / 2,
+                POINT_SIZE,
+                POINT_SIZE,
+            );
+
+            return;
+        }
+
+        ctx.fillRect(
+            point.anchor.x - SELECTED_POINT_SIZE / 2,
+            point.anchor.y - SELECTED_POINT_SIZE / 2,
+            SELECTED_POINT_SIZE,
+            SELECTED_POINT_SIZE,
+        );
+
+        ctx.fillRect(
+            point.handleInPoint().x - SELECTED_POINT_SIZE / 2,
+            point.handleInPoint().y - SELECTED_POINT_SIZE / 2,
+            SELECTED_POINT_SIZE,
+            SELECTED_POINT_SIZE,
+        );
+
+        ctx.fillRect(
+            point.handleOutPoint().x - SELECTED_POINT_SIZE / 2,
+            point.handleOutPoint().y - SELECTED_POINT_SIZE / 2,
+            SELECTED_POINT_SIZE,
+            SELECTED_POINT_SIZE,
+        );
+
+        ctx.lineTo(point.handleInPoint().x, point.handleInPoint().y);
+        ctx.moveTo(point.anchor.x, point.anchor.y);
+        ctx.lineTo(point.handleOutPoint().x, point.handleOutPoint().y);
+        ctx.moveTo(point.anchor.x, point.anchor.y);
+    }
+}
+
+export class Renderer {
+    private readonly ctx: CanvasRenderingContext2D;
+    private readonly drawables: Drawable[];
+
+    public constructor(ctx: CanvasRenderingContext2D, drawables: Drawable[]) {
         this.ctx = ctx;
-        this.selection = selection;
-        this.shapes = shapes;
+        this.drawables = drawables;
 
         this.ctx.strokeStyle = DEFAULT_STYLE;
         this.ctx.fillStyle = DEFAULT_STYLE;
     }
 
-    public redraw() {
+    public redraw(selection: SelectionStore) {
         const canvas = this.ctx.canvas;
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        for (const shape of this.shapes) {
-            this.drawShape(shape);
+        for (const drawable of this.drawables) {
+            this.ctx.save();
+            drawable.draw(this.ctx, selection);
+            this.ctx.restore();
         }
+    }
+
+    public addDrawer(drawer: Drawable): void {
+        this.drawables.push(drawer);
     }
 
     public drawSelectionBox(x: number, y: number, w: number, h: number) {
@@ -53,82 +148,5 @@ export class Renderer {
         this.ctx.ellipse(center.x, center.y, Math.abs(w / 2), Math.abs(h / 2), 0, 0, Math.PI * 2);
         this.ctx.stroke();
         this.ctx.restore();
-    }
-
-    private drawShape(shape: Shape) {
-        this.ctx.save();
-
-        const isShapeSelected = this.selection.shape === shape;
-        if (isShapeSelected) {
-            this.ctx.strokeStyle = SELECTED_STYLE;
-            this.ctx.fillStyle = SELECTED_STYLE;
-        }
-
-        this.ctx.beginPath();
-
-        for (let i = 0; i < shape.points.length; i++) {
-            const current = shape.points[i];
-            const next = shape.points[(i + 1) % shape.points.length];
-
-            if (i === 0) {
-                this.ctx.moveTo(current.anchor.x, current.anchor.y);
-            }
-
-            this.drawPoint(current, isShapeSelected);
-            this.ctx.bezierCurveTo(
-                current.handleOutPoint().x,
-                current.handleOutPoint().y,
-                next.handleInPoint().x,
-                next.handleInPoint().y,
-                next.anchor.x,
-                next.anchor.y,
-            );
-        }
-
-        this.ctx.stroke();
-        this.ctx.restore();
-    }
-
-    private drawPoint(point: BezierPoint, isParentSelected: boolean) {
-        if (!isParentSelected) {
-            return;
-        }
-
-        if (this.selection.point !== point) {
-            this.ctx.fillRect(
-                point.anchor.x - POINT_SIZE / 2,
-                point.anchor.y - POINT_SIZE / 2,
-                POINT_SIZE,
-                POINT_SIZE,
-            );
-
-            return;
-        }
-
-        this.ctx.fillRect(
-            point.anchor.x - SELECTED_POINT_SIZE / 2,
-            point.anchor.y - SELECTED_POINT_SIZE / 2,
-            SELECTED_POINT_SIZE,
-            SELECTED_POINT_SIZE,
-        );
-
-        this.ctx.fillRect(
-            point.handleInPoint().x - SELECTED_POINT_SIZE / 2,
-            point.handleInPoint().y - SELECTED_POINT_SIZE / 2,
-            SELECTED_POINT_SIZE,
-            SELECTED_POINT_SIZE,
-        );
-
-        this.ctx.fillRect(
-            point.handleOutPoint().x - SELECTED_POINT_SIZE / 2,
-            point.handleOutPoint().y - SELECTED_POINT_SIZE / 2,
-            SELECTED_POINT_SIZE,
-            SELECTED_POINT_SIZE,
-        );
-
-        this.ctx.lineTo(point.handleInPoint().x, point.handleInPoint().y);
-        this.ctx.moveTo(point.anchor.x, point.anchor.y);
-        this.ctx.lineTo(point.handleOutPoint().x, point.handleOutPoint().y);
-        this.ctx.moveTo(point.anchor.x, point.anchor.y);
     }
 }

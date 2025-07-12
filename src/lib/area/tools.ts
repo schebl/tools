@@ -1,4 +1,5 @@
 import {Point2D, Vector} from "$lib/area/geometry.svelte";
+import {ShapeDrawable} from "$lib/area/renderer";
 import {BezierPoint, Shape} from "$lib/area/shape.svelte";
 import type {Tool, ToolContext, ToolDescriptor} from "$lib/area/tool.svelte";
 
@@ -20,40 +21,31 @@ export const createRectTool: ToolDescriptor = {
         return new class implements Tool {
             private startPoint: Point2D | null = null;
 
-            public start({event}: ToolContext): void {
-                this.startPoint = new Point2D(event.offsetX, event.offsetY);
+            public start({click}: ToolContext): void {
+                this.startPoint = click;
             }
 
-            public update({
-                event,
-                renderer,
-            }: ToolContext) {
-                if (!this.startPoint || !renderer) {
+            public update(ctx: ToolContext) {
+                if (!this.startPoint || !ctx.renderer) {
                     return;
                 }
 
-                const click = new Point2D(event.offsetX, event.offsetY);
+                const click = new Point2D(ctx.event.offsetX, ctx.event.offsetY);
 
                 const w = click.x - this.startPoint.x;
                 const h = click.y - this.startPoint.y;
 
-                renderer.redraw();
-                renderer.drawBox(this.startPoint.x, this.startPoint.y, w, h);
+                ctx.renderer.redraw(ctx.selection);
+                ctx.renderer.drawBox(this.startPoint.x, this.startPoint.y, w, h);
             }
 
-            public end({
-                shapes,
-                selection,
-                event,
-            }: ToolContext) {
+            public end(ctx: ToolContext) {
                 if (!this.startPoint) {
                     return;
                 }
 
-                const click = new Point2D(event.offsetX, event.offsetY);
-
-                const w = click.x - this.startPoint.x;
-                const h = click.y - this.startPoint.y;
+                const w = ctx.click.x - this.startPoint.x;
+                const h = ctx.click.y - this.startPoint.y;
 
                 const shape = new Shape();
                 shape.addPoint(BezierPoint.fromXY(this.startPoint.x, this.startPoint.y));
@@ -61,8 +53,9 @@ export const createRectTool: ToolDescriptor = {
                 shape.addPoint(BezierPoint.fromXY(this.startPoint.x + w, this.startPoint.y + h));
                 shape.addPoint(BezierPoint.fromXY(this.startPoint.x, this.startPoint.y + h));
 
-                shapes.push(shape);
-                selection.selectShape(shape);
+                ctx.shapes.push(shape);
+                ctx.selection.selectShape(shape);
+                ctx.renderer?.addDrawer(new ShapeDrawable(shape));
             }
         };
     },
@@ -84,36 +77,25 @@ export const createEllipseTool: ToolDescriptor = {
                 this.startPoint = new Point2D(event.offsetX, event.offsetY);
             }
 
-            public update({
-                event,
-                renderer,
-            }: ToolContext) {
-                if (!this.startPoint || !renderer) {
+            public update(ctx: ToolContext) {
+                if (!this.startPoint || !ctx.renderer) {
                     return;
                 }
 
-                const click = new Point2D(event.offsetX, event.offsetY);
+                const w = ctx.click.x - this.startPoint.x;
+                const h = ctx.click.y - this.startPoint.y;
 
-                const w = click.x - this.startPoint.x;
-                const h = click.y - this.startPoint.y;
-
-                renderer.redraw();
-                renderer.drawEllipse(this.startPoint.x, this.startPoint.y, w, h);
+                ctx.renderer.redraw(ctx.selection);
+                ctx.renderer.drawEllipse(this.startPoint.x, this.startPoint.y, w, h);
             }
 
-            public end({
-                shapes,
-                selection,
-                event,
-            }: ToolContext) {
+            public end(ctx: ToolContext) {
                 if (!this.startPoint) {
                     return;
                 }
 
-                const click = new Point2D(event.offsetX, event.offsetY);
-
-                const w = click.x - this.startPoint.x;
-                const h = click.y - this.startPoint.y;
+                const w = ctx.click.x - this.startPoint.x;
+                const h = ctx.click.y - this.startPoint.y;
 
                 const center = {
                     x: this.startPoint.x + w / 2,
@@ -144,8 +126,9 @@ export const createEllipseTool: ToolDescriptor = {
                 addEllipseSegment(center.x, this.startPoint.y + h, -w, 0);
                 addEllipseSegment(this.startPoint.x, center.y, 0, -h);
 
-                shapes.push(shape);
-                selection.selectShape(shape);
+                ctx.shapes.push(shape);
+                ctx.selection.selectShape(shape);
+                ctx.renderer?.addDrawer(new ShapeDrawable(shape));
             }
         };
     },
@@ -161,29 +144,25 @@ export const addPointTool: ToolDescriptor = {
 
     create(): Tool {
         return new class implements Tool {
-            public start({
-                selection,
-                event,
-            }: ToolContext): void {
-                if (!selection.shape) {
+            public start(ctx: ToolContext): void {
+                if (!ctx.selection.shape) {
                     return;
                 }
 
-                const hit = BezierPoint.fromXY(event.offsetX, event.offsetY);
+                for (let i = 0; i < ctx.selection.shape.points.length; i++) {
+                    const nextI = (i + 1) % ctx.selection.shape.points.length;
 
-                for (let i = 0; i < selection.shape.points.length; i++) {
-                    const nextI = (i + 1) % selection.shape.points.length;
+                    const current = ctx.selection.shape.points[i];
+                    const next = ctx.selection.shape.points[nextI];
 
-                    const current = selection.shape.points[i];
-                    const next = selection.shape.points[nextI];
+                    if (ctx.click.distanceToBezierLine(current, next) < ADD_POINT_RADIUS) {
+                        const point = BezierPoint.fromPoint(ctx.click);
 
-                    if (hit.anchor.distanceToBezierLine(current, next) < ADD_POINT_RADIUS) {
-                        selection.shape.insertAt(nextI, hit);
+                        ctx.selection.shape.insertAt(nextI, point);
+                        ctx.selection.selectPoint(point);
                         break;
                     }
                 }
-
-                selection.selectPoint(hit);
             }
 
             public update({}: ToolContext) {
@@ -207,25 +186,20 @@ export const moveAnchorTool: ToolDescriptor = {
         return new class implements Tool {
             private movingAnchor: Point2D | null = null;
 
-            public start({
-                selection,
-                event,
-            }: ToolContext): void {
-                const click = new Point2D(event.offsetX, event.offsetY);
-
-                if (selection.point && selection.point.anchor.distanceTo(click)
+            public start(ctx: ToolContext): void {
+                if (ctx.selection.point && ctx.selection.point.anchor.distanceTo(ctx.click)
                     <= POINT_SELECTION_RADIUS) {
-                    this.movingAnchor = selection.point.anchor;
+                    this.movingAnchor = ctx.selection.point.anchor;
                 }
             }
 
-            public update({event}: ToolContext) {
+            public update({click}: ToolContext) {
                 if (!this.movingAnchor) {
                     return;
                 }
 
-                this.movingAnchor.x = event.offsetX;
-                this.movingAnchor.y = event.offsetY;
+                this.movingAnchor.x = click.x;
+                this.movingAnchor.y = click.y;
             }
 
             public end({}: ToolContext) {
@@ -248,23 +222,20 @@ export const moveControlTool: ToolDescriptor = {
             private movingControl: Vector | null = null;
             private oldControl: Vector | null = null;
 
-            public start({
-                selection,
-                event,
-            }: ToolContext): void {
-                if (!selection.point) {
+            public start(ctx: ToolContext): void {
+                if (!ctx.selection.point) {
                     return;
                 }
 
-                this.startPoint = new Point2D(event.offsetX, event.offsetY);
+                this.startPoint = ctx.click;
 
-                if (this.startPoint.distanceTo(selection.point.handleInPoint())
+                if (this.startPoint.distanceTo(ctx.selection.point.handleInPoint())
                     <= POINT_SELECTION_RADIUS) {
-                    this.movingControl = selection.point.handleIn;
+                    this.movingControl = ctx.selection.point.handleIn;
                 }
-                if (this.startPoint.distanceTo(selection.point.handleOutPoint())
+                if (this.startPoint.distanceTo(ctx.selection.point.handleOutPoint())
                     <= POINT_SELECTION_RADIUS) {
-                    this.movingControl = selection.point.handleOut;
+                    this.movingControl = ctx.selection.point.handleOut;
                 }
 
                 if (this.movingControl) {
@@ -272,12 +243,11 @@ export const moveControlTool: ToolDescriptor = {
                 }
             }
 
-            public update({event}: ToolContext) {
+            public update({click}: ToolContext) {
                 if (!this.startPoint || !this.movingControl || !this.oldControl) {
                     return;
                 }
 
-                const click = new Point2D(event.offsetX, event.offsetY);
                 const clickOffset = this.startPoint.vectorTo(click).add(this.oldControl);
 
                 this.movingControl.dx = clickOffset.dx;
@@ -307,62 +277,52 @@ export const selectPointTool: ToolDescriptor = {
                 this.startPoint = new Point2D(event.offsetX, event.offsetY);
             }
 
-            public update({
-                event,
-                renderer,
-            }: ToolContext): void {
+            public update(ctx: ToolContext): void {
                 if (!this.startPoint) {
                     return;
                 }
 
-                const hit = new Point2D(event.offsetX, event.offsetY);
-
                 if (!this.isDragging) {
-                    if (Math.abs(hit.x - this.startPoint.x) > DRAG_THRESHOLD || Math.abs(hit.y
-                        - this.startPoint.y) > DRAG_THRESHOLD) {
+                    if (Math.abs(ctx.click.x - this.startPoint.x) > DRAG_THRESHOLD
+                        || Math.abs(ctx.click.y
+                            - this.startPoint.y) > DRAG_THRESHOLD) {
                         this.isDragging = true;
                     }
                 }
 
-                if (this.isDragging && renderer) {
-                    const w = hit.x - this.startPoint.x;
-                    const h = hit.y - this.startPoint.y;
+                if (this.isDragging && ctx.renderer) {
+                    const w = ctx.click.x - this.startPoint.x;
+                    const h = ctx.click.y - this.startPoint.y;
 
-                    renderer.redraw();
-                    renderer.drawSelectionBox(this.startPoint.x, this.startPoint.y, w, h);
+                    ctx.renderer.redraw(ctx.selection);
+                    ctx.renderer.drawSelectionBox(this.startPoint.x, this.startPoint.y, w, h);
                 }
             }
 
-            public end({
-                event,
-                selection,
-                renderer,
-            }: ToolContext): void {
+            public end(ctx: ToolContext): void {
                 if (!this.startPoint) {
                     return;
                 }
 
-                const end = new Point2D(event.offsetX, event.offsetY);
-
-                selection.selectPoint(null);
+                ctx.selection.selectPoint(null);
 
                 if (!this.isDragging) {
-                    for (const point of selection.shape?.points ?? []) {
-                        if (point.anchor.distanceTo(end) <= POINT_SELECTION_RADIUS) {
-                            selection.selectPoint(point);
+                    for (const point of ctx.selection.shape?.points ?? []) {
+                        if (point.anchor.distanceTo(ctx.click) <= POINT_SELECTION_RADIUS) {
+                            ctx.selection.selectPoint(point);
                             break;
                         }
                     }
                 }
 
                 if (this.isDragging) {
-                    const x0 = Math.min(this.startPoint.x, end.x);
-                    const y0 = Math.min(this.startPoint.y, end.y);
-                    const x1 = Math.max(this.startPoint.x, end.x);
-                    const y1 = Math.max(this.startPoint.y, end.y);
+                    const x0 = Math.min(this.startPoint.x, ctx.click.x);
+                    const y0 = Math.min(this.startPoint.y, ctx.click.y);
+                    const x1 = Math.max(this.startPoint.x, ctx.click.x);
+                    const y1 = Math.max(this.startPoint.y, ctx.click.y);
 
                     const hits: BezierPoint[] = [];
-                    for (const point of selection.shape?.points ?? []) {
+                    for (const point of ctx.selection.shape?.points ?? []) {
                         if (point.anchor.x >= x0 && point.anchor.x <= x1 && point.anchor.y >= y0
                             && point.anchor.y <= y1) {
                             hits.push(point);
@@ -370,13 +330,13 @@ export const selectPointTool: ToolDescriptor = {
                     }
 
                     if (hits.length > 0) {
-                        selection.selectPoint(hits[0]);
+                        ctx.selection.selectPoint(hits[0]);
                         // TODO: multi-select
                     }
                 }
 
-                if (renderer) {
-                    renderer.redraw();
+                if (ctx.renderer) {
+                    ctx.renderer.redraw(ctx.selection);
                 }
             }
         };

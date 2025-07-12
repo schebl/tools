@@ -1,7 +1,7 @@
 <script lang="ts">
     import {Renderer} from "$lib/area/renderer";
     import {SelectionStore, ShapeStore} from "$lib/area/shape.svelte";
-    import {type ToolContext, ToolManager} from "$lib/area/tool.svelte";
+    import {type BaseToolContext, type ToolContext, ToolManager} from "$lib/area/tool.svelte";
     import {
         addPointTool,
         createEllipseTool,
@@ -14,6 +14,7 @@
 
     const shapes = new ShapeStore();
     const selection = new SelectionStore();
+    const drawables = $state([]);
 
     const toolManager = new ToolManager();
     toolManager.register(createRectTool, createEllipseTool);
@@ -21,7 +22,7 @@
 
     let totalArea = $state(0);
 
-    function getToolCtx(renderer?: Renderer): Omit<ToolContext, "event"> {
+    function getToolCtx(renderer?: Renderer): BaseToolContext {
         return {
             shapes: shapes.all(),
             selection: selection,
@@ -34,7 +35,7 @@
         if (!ctx) {
             throw new Error("Unable to get canvas drawing context");
         }
-        const renderer = new Renderer(ctx, selection, shapes.all());
+        const renderer = new Renderer(ctx, drawables);
 
         const handlePointerDown = (event: PointerEvent) => {
             toolManager.handleEvent(event, getToolCtx(renderer));
@@ -48,7 +49,7 @@
         });
 
         $effect(() => {
-            renderer.redraw();
+            renderer.redraw(selection);
         });
 
         return () => {

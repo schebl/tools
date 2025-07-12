@@ -1,12 +1,16 @@
+import {Point2D} from "$lib/area/geometry.svelte";
 import type {Renderer} from "$lib/area/renderer";
 import {SelectionStore, Shape} from "$lib/area/shape.svelte";
 
 export interface ToolContext {
     shapes: Shape[];
     selection: SelectionStore;
-    event: PointerEvent;
     renderer: Renderer | null;
+    event: PointerEvent;
+    click: Point2D;
 }
+
+export type BaseToolContext = Omit<ToolContext, "event" | "click">
 
 /**
  * Represents lifecycle of canvas tool.
@@ -20,7 +24,7 @@ export interface Tool {
 export interface ToolDescriptor {
     readonly id: string;
     readonly label: string;
-    isApplicable(ctx: Omit<ToolContext, "event">): boolean;
+    isApplicable(ctx: BaseToolContext): boolean;
     create(): Tool;
 }
 
@@ -41,7 +45,7 @@ export class ToolManager {
     /**
      * Marks tool as active. Active tool will be used in event handling.
      */
-    public activate(toolID: string, ctx: Omit<ToolContext, "event">): void {
+    public activate(toolID: string, ctx: BaseToolContext): void {
         const descriptor = this.descriptors.find(d => d.id === toolID);
         if (descriptor && descriptor.isApplicable(ctx)) {
             this.activeDescriptor = descriptor;
@@ -53,11 +57,11 @@ export class ToolManager {
         return !!this.activeDescriptor && this.activeDescriptor.id === toolID;
     }
 
-    public getApplicable(ctx: Omit<ToolContext, "event">): ToolDescriptor[] {
+    public getApplicable(ctx: BaseToolContext): ToolDescriptor[] {
         return this.descriptors.filter(d => d.isApplicable(ctx));
     }
 
-    public handleEvent(event: PointerEvent, baseCtx: Omit<ToolContext, "event">): void {
+    public handleEvent(event: PointerEvent, baseCtx: BaseToolContext): void {
         if (!this.activeDescriptor) {
             return;
         }
@@ -67,9 +71,10 @@ export class ToolManager {
             return;
         }
 
-        const ctx = {
+        const ctx: ToolContext = {
             ...baseCtx,
             event: event,
+            click: new Point2D(event.offsetX, event.offsetY),
         };
 
         switch (event.type) {
