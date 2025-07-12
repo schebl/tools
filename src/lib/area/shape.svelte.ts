@@ -102,4 +102,11 @@ export class SelectionStore {
         this.shape = shape;
         this.point = null;
     }
+
+    public isSelected(shape: Shape, point: BezierPoint | null = null): boolean {
+        if (!point) {
+            return this.shape === shape;
+        }
+        return this.shape === shape && this.point === point;
+    }
 }

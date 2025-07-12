@@ -21,8 +21,7 @@ export class ShapeDrawable implements Drawable {
     }
 
     public draw(ctx: CanvasRenderingContext2D, selection: SelectionStore) {
-        const isShapeSelected = selection.shape === this.shape;
-        if (isShapeSelected) {
+        if (selection.isSelected(this.shape)) {
             ctx.strokeStyle = SELECTED_STYLE;
             ctx.fillStyle = SELECTED_STYLE;
         }
@@ -37,7 +36,7 @@ export class ShapeDrawable implements Drawable {
                 ctx.moveTo(current.anchor.x, current.anchor.y);
             }
 
-            this.drawPoint(ctx, selection, current, isShapeSelected);
+            this.drawPoint(ctx, selection, current);
             ctx.bezierCurveTo(
                 current.handleOutPoint().x,
                 current.handleOutPoint().y,
@@ -55,48 +54,33 @@ export class ShapeDrawable implements Drawable {
         ctx: CanvasRenderingContext2D,
         selection: SelectionStore,
         point: BezierPoint,
-        isParentSelected: boolean,
     ) {
-        if (!isParentSelected) {
+        if (!selection.isSelected(this.shape)) {
             return;
         }
 
-        if (selection.point !== point) {
-            ctx.fillRect(
-                point.anchor.x - POINT_SIZE / 2,
-                point.anchor.y - POINT_SIZE / 2,
-                POINT_SIZE,
-                POINT_SIZE,
-            );
-
+        if (!selection.isSelected(this.shape, point)) {
+            this.drawPointControl(ctx, point.anchor, POINT_SIZE);
             return;
         }
 
-        ctx.fillRect(
-            point.anchor.x - SELECTED_POINT_SIZE / 2,
-            point.anchor.y - SELECTED_POINT_SIZE / 2,
-            SELECTED_POINT_SIZE,
-            SELECTED_POINT_SIZE,
-        );
-
-        ctx.fillRect(
-            point.handleInPoint().x - SELECTED_POINT_SIZE / 2,
-            point.handleInPoint().y - SELECTED_POINT_SIZE / 2,
-            SELECTED_POINT_SIZE,
-            SELECTED_POINT_SIZE,
-        );
-
-        ctx.fillRect(
-            point.handleOutPoint().x - SELECTED_POINT_SIZE / 2,
-            point.handleOutPoint().y - SELECTED_POINT_SIZE / 2,
-            SELECTED_POINT_SIZE,
-            SELECTED_POINT_SIZE,
-        );
+        this.drawPointControl(ctx, point.anchor, SELECTED_POINT_SIZE);
+        this.drawPointControl(ctx, point.handleInPoint(), SELECTED_POINT_SIZE);
+        this.drawPointControl(ctx, point.handleOutPoint(), SELECTED_POINT_SIZE);
 
         ctx.lineTo(point.handleInPoint().x, point.handleInPoint().y);
         ctx.moveTo(point.anchor.x, point.anchor.y);
         ctx.lineTo(point.handleOutPoint().x, point.handleOutPoint().y);
         ctx.moveTo(point.anchor.x, point.anchor.y);
+    }
+
+    private drawPointControl(ctx: CanvasRenderingContext2D, point: Point2D, size: number) {
+        ctx.fillRect(
+            point.x - size / 2,
+            point.y - size / 2,
+            size,
+            size,
+        );
     }
 }
 
