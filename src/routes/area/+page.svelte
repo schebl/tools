@@ -1,7 +1,7 @@
 <script lang="ts">
-    import {Renderer} from "$lib/area/renderer";
-    import {SelectionStore, ShapeStore} from "$lib/area/shape.svelte";
-    import {type BaseToolContext, type ToolContext, ToolManager} from "$lib/area/tool.svelte";
+    import {Renderer} from "$lib/area/canvas";
+    import {SelectionStore, ShapeStore} from "$lib/area/figures";
+    import type {BaseToolContext} from "$lib/area/tool";
     import {
         addPointTool,
         createEllipseTool,
@@ -9,7 +9,8 @@
         moveAnchorTool,
         moveControlTool,
         selectPointTool,
-    } from "$lib/area/tools";
+        ToolManager,
+    } from "$lib/area/tool";
     import type {Attachment} from "svelte/attachments";
 
     const shapes = new ShapeStore();

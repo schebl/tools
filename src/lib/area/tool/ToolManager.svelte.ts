@@ -1,6 +1,6 @@
-import {Point2D} from "$lib/area/geometry.svelte";
-import type {Renderer} from "$lib/area/renderer";
-import {SelectionStore, Shape} from "$lib/area/shape.svelte";
+import type {Renderer} from "$lib/area/canvas";
+import type {SelectionStore, Shape} from "$lib/area/figures";
+import {Point2D} from "$lib/area/geometry";
 
 export interface ToolContext {
     shapes: Shape[];
