@@ -29,10 +29,6 @@ export class Renderer {
         }
     }
 
-    public addDrawer(drawer: Drawable): void {
-        this.drawables.push(drawer);
-    }
-
     public drawSelectionBox(x: number, y: number, w: number, h: number) {
         this.ctx.save();
         this.ctx.setLineDash(canvasConfig.LINE_DASH);

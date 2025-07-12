@@ -1,7 +1,5 @@
 <script lang="ts">
-    import {Renderer} from "$lib/area/canvas";
-    import {SelectionStore, ShapeStore} from "$lib/area/figures";
-    import type {BaseToolContext} from "$lib/area/tool";
+    import {Editor} from "$lib/area/Editor";
     import {
         addPointTool,
         createEllipseTool,
@@ -9,37 +7,25 @@
         moveAnchorTool,
         moveControlTool,
         selectPointTool,
-        ToolManager,
     } from "$lib/area/tool";
     import type {Attachment} from "svelte/attachments";
 
-    const shapes = new ShapeStore();
-    const selection = new SelectionStore();
-    const drawables = $state([]);
-
-    const toolManager = new ToolManager();
-    toolManager.register(createRectTool, createEllipseTool);
-    toolManager.register(addPointTool, moveAnchorTool, moveControlTool, selectPointTool);
+    const editor = new Editor();
+    editor.toolManager.register(createRectTool, createEllipseTool);
+    editor.toolManager.register(addPointTool, selectPointTool);
+    editor.toolManager.register(moveAnchorTool, moveControlTool);
 
     let totalArea = $state(0);
-
-    function getToolCtx(renderer?: Renderer): BaseToolContext {
-        return {
-            shapes: shapes.all(),
-            selection: selection,
-            renderer: renderer ?? null,
-        };
-    }
 
     const canvasAttachment: Attachment<HTMLCanvasElement> = (canvas) => {
         const ctx = canvas.getContext("2d");
         if (!ctx) {
             throw new Error("Unable to get canvas drawing context");
         }
-        const renderer = new Renderer(ctx, drawables);
+        editor.initRenderer(ctx);
 
         const handlePointerDown = (event: PointerEvent) => {
-            toolManager.handleEvent(event, getToolCtx(renderer));
+            editor.toolManager.handleEvent(event, editor.toolCtx);
         };
 
         const canvasEvents: (keyof HTMLElementEventMap)[] = [
@@ -50,7 +36,7 @@
         });
 
         $effect(() => {
-            renderer.redraw(selection);
+            editor.renderer?.redraw(editor.selection);
         });
 
         return () => {
@@ -73,7 +59,7 @@
             <p>{totalArea}</p>
         </div>
 
-        <button onclick={() => {totalArea = shapes.area()}}>
+        <button onclick={() => {totalArea = editor.totalArea}}>
             Calculate
         </button>
     </div>
@@ -82,12 +68,12 @@
         <p>Shapes</p>
 
         <div>
-            {#each shapes.all() as shape, i}
+            {#each editor.shapes.all() as shape, i}
                 <div>
                     <label for="selection-shape-{i}">Shape {i + 1}</label>
 
                     <input
-                        onclick={() => {selection.selectShape(shape)}}
+                        onclick={() => {editor.selection.selectShape(shape)}}
                         id="selection-shape-{i}"
                         type="radio"
                         name="selection"
@@ -108,16 +94,16 @@
         <p>Tools</p>
 
         <div>
-            {#each toolManager.getApplicable(getToolCtx()) as tool}
+            {#each editor.toolManager.getApplicable(editor.toolCtx) as tool (tool.id)}
                 <div>
                     <label for="tool-{tool.id}">{tool.label}</label>
 
                     <input
-                        onclick={() => {toolManager.activate(tool.id, getToolCtx())}}
+                        onclick={() => {editor.toolManager.activate(tool.id, editor.toolCtx)}}
                         id="tool-{tool.id}"
                         type="radio"
                         name="tool"
-                        checked={toolManager.isActive(tool.id)}
+                        checked={editor.toolManager.isActive(tool.id)}
                     >
                 </div>
             {/each}

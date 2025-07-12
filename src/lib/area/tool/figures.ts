@@ -25,10 +25,8 @@ export const createRectTool: ToolDescriptor = {
                     return;
                 }
 
-                const click = new Point2D(ctx.event.offsetX, ctx.event.offsetY);
-
-                const w = click.x - this.startPoint.x;
-                const h = click.y - this.startPoint.y;
+                const w = ctx.click.x - this.startPoint.x;
+                const h = ctx.click.y - this.startPoint.y;
 
                 ctx.renderer.redraw(ctx.selection);
                 ctx.renderer.drawBox(this.startPoint.x, this.startPoint.y, w, h);
@@ -50,7 +48,6 @@ export const createRectTool: ToolDescriptor = {
 
                 ctx.shapes.push(shape);
                 ctx.selection.selectShape(shape);
-                ctx.renderer?.addDrawer(new ShapeDrawable(shape));
             }
         };
     },
@@ -123,7 +120,6 @@ export const createEllipseTool: ToolDescriptor = {
 
                 ctx.shapes.push(shape);
                 ctx.selection.selectShape(shape);
-                ctx.renderer?.addDrawer(new ShapeDrawable(shape));
             }
         };
     },
