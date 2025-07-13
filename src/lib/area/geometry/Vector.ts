@@ -3,8 +3,8 @@ export class Vector {
     public dy: number;
 
     public constructor(dx: number, dy: number) {
-        this.dx = $state(dx);
-        this.dy = $state(dy);
+        this.dx = dx;
+        this.dy = dy;
     }
 
     public add(vector: Vector): Vector {

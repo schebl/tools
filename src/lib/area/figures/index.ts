@@ -1,10 +1,9 @@
-export * from "./SelectionStore.svelte"
+export * from "./SelectionStore.svelte.js"
 
-export * from "./ShapeStore.svelte"
 export * from "./Shape.svelte"
 export * from "./ShapeDrawable"
 
-export * from "./Ruler.svelte"
+export * from "./Ruler.js"
 export * from "./RulerDrawable"
 
 export * from "./BezierPoint"

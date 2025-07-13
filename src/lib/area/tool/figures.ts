@@ -1,35 +1,74 @@
-import {BezierPoint, Shape, ShapeDrawable} from "$lib/area/figures";
+import {Renderer} from "$lib/area/canvas";
+import {BezierPoint, Ruler, SelectionStore, Shape} from "$lib/area/figures";
 import {Point2D, Vector} from "$lib/area/geometry";
 import type {Tool, ToolContext, ToolDescriptor} from ".";
 
 const ELLIPSE_CONTROL_DISTANCE = 0.55191502449;
 
+export const setRulerTool: ToolDescriptor = {
+    id: "set-ruler",
+    label: "Set ruler",
+
+    isApplicable(_: SelectionStore): boolean {
+        return true;
+    },
+
+    create(): Tool {
+        return new class implements Tool {
+            private ruler: Ruler | null = null;
+
+            public start(ctx: ToolContext): void {
+                ctx.editor.ruler = new Ruler(
+                    new Point2D(ctx.click.x, ctx.click.y),
+                    new Point2D(ctx.click.x, ctx.click.y),
+                );
+                this.ruler = ctx.editor.ruler;
+            }
+
+            public update(ctx: ToolContext) {
+                if (!this.ruler) {
+                    return;
+                }
+
+                this.ruler.end = ctx.click;
+            }
+
+            public end({}: ToolContext) {
+            }
+        };
+    },
+};
+
 export const createRectTool: ToolDescriptor = {
     id: "create-rect",
     label: "Create rectangle",
 
-    isApplicable({}: ToolContext): boolean {
+    isApplicable(_: SelectionStore): boolean {
         return true;
     },
 
     create(): Tool {
         return new class implements Tool {
             private startPoint: Point2D | null = null;
+            private endPoint: Point2D | null = null;
+
+            public renderOverlay(renderer: Renderer) {
+                if (!this.startPoint || !this.endPoint) {
+                    return;
+                }
+
+                const w = this.endPoint.x - this.startPoint.x;
+                const h = this.endPoint.y - this.startPoint.y;
+
+                renderer.drawBox(this.startPoint.x, this.startPoint.y, w, h);
+            }
 
             public start({click}: ToolContext): void {
                 this.startPoint = click;
             }
 
-            public update(ctx: ToolContext) {
-                if (!this.startPoint || !ctx.renderer) {
-                    return;
-                }
-
-                const w = ctx.click.x - this.startPoint.x;
-                const h = ctx.click.y - this.startPoint.y;
-
-                ctx.renderer.redraw(ctx.selection);
-                ctx.renderer.drawBox(this.startPoint.x, this.startPoint.y, w, h);
+            public update({click}: ToolContext) {
+                this.endPoint = click;
             }
 
             public end(ctx: ToolContext) {
@@ -46,8 +85,8 @@ export const createRectTool: ToolDescriptor = {
                 shape.addPoint(BezierPoint.fromXY(this.startPoint.x + w, this.startPoint.y + h));
                 shape.addPoint(BezierPoint.fromXY(this.startPoint.x, this.startPoint.y + h));
 
-                ctx.shapes.push(shape);
-                ctx.selection.selectShape(shape);
+                ctx.editor.addShape(shape);
+                ctx.editor.selection.selectShape(shape);
             }
         };
     },
@@ -57,28 +96,32 @@ export const createEllipseTool: ToolDescriptor = {
     id: "create-ellipse",
     label: "Create ellipse",
 
-    isApplicable({}: ToolContext): boolean {
+    isApplicable(_: SelectionStore): boolean {
         return true;
     },
 
     create(): Tool {
         return new class implements Tool {
             private startPoint: Point2D | null = null;
+            private endPoint: Point2D | null = null;
 
-            public start({event}: ToolContext): void {
-                this.startPoint = new Point2D(event.offsetX, event.offsetY);
-            }
-
-            public update(ctx: ToolContext) {
-                if (!this.startPoint || !ctx.renderer) {
+            public renderOverlay(renderer: Renderer) {
+                if (!this.startPoint || !this.endPoint) {
                     return;
                 }
 
-                const w = ctx.click.x - this.startPoint.x;
-                const h = ctx.click.y - this.startPoint.y;
+                const w = this.endPoint.x - this.startPoint.x;
+                const h = this.endPoint.y - this.startPoint.y;
 
-                ctx.renderer.redraw(ctx.selection);
-                ctx.renderer.drawEllipse(this.startPoint.x, this.startPoint.y, w, h);
+                renderer.drawEllipse(this.startPoint.x, this.startPoint.y, w, h);
+            }
+
+            public start({click}: ToolContext): void {
+                this.startPoint = click;
+            }
+
+            public update({click}: ToolContext) {
+                this.endPoint = click;
             }
 
             public end(ctx: ToolContext) {
@@ -118,8 +161,8 @@ export const createEllipseTool: ToolDescriptor = {
                 addEllipseSegment(center.x, this.startPoint.y + h, -w, 0);
                 addEllipseSegment(this.startPoint.x, center.y, 0, -h);
 
-                ctx.shapes.push(shape);
-                ctx.selection.selectShape(shape);
+                ctx.editor.addShape(shape);
+                ctx.editor.selection.selectShape(shape);
             }
         };
     },

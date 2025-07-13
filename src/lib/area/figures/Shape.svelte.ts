@@ -21,7 +21,6 @@ export class Shape {
     public area(): number {
         let area = 0;
 
-        console.log();
         for (let i = 0; i < this.points.length; i++) {
             const current = this.points[i];
             const next = this.points[(i + 1) % this.points.length];

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Editor} from "$lib/area/Editor";
+    import {Editor} from "$lib/area/Editor.svelte";
     import {
         addPointTool,
         createEllipseTool,
@@ -7,44 +7,26 @@
         moveAnchorTool,
         moveControlTool,
         selectPointTool,
+        setRulerTool,
     } from "$lib/area/tool";
-    import type {Attachment} from "svelte/attachments";
+    import {onMount} from "svelte";
 
     const editor = new Editor();
-    editor.toolManager.register(createRectTool, createEllipseTool);
-    editor.toolManager.register(addPointTool, selectPointTool);
-    editor.toolManager.register(moveAnchorTool, moveControlTool);
+    editor.tools.register(createRectTool, createEllipseTool, setRulerTool);
+    editor.tools.register(addPointTool, selectPointTool);
+    editor.tools.register(moveAnchorTool, moveControlTool);
 
     let totalArea = $state(0);
 
-    const canvasAttachment: Attachment<HTMLCanvasElement> = (canvas) => {
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-            throw new Error("Unable to get canvas drawing context");
-        }
-        editor.initRenderer(ctx);
+    let canvas: HTMLCanvasElement;
 
-        const handlePointerDown = (event: PointerEvent) => {
-            editor.toolManager.handleEvent(event, editor.toolCtx);
-        };
-
-        const canvasEvents: (keyof HTMLElementEventMap)[] = [
-            "pointerdown", "pointermove", "pointerup",
-        ];
-        canvasEvents.forEach((e) => {
-            canvas.addEventListener(e, handlePointerDown);
-        });
-
-        $effect(() => {
-            editor.renderer?.redraw(editor.selection);
-        });
+    onMount(() => {
+        editor.init(canvas);
 
         return () => {
-            canvasEvents.forEach((e) => {
-                canvas.removeEventListener(e, handlePointerDown);
-            });
+            editor.destroy();
         };
-    };
+    });
 </script>
 
 <svelte:head>
@@ -68,7 +50,7 @@
         <p>Shapes</p>
 
         <div>
-            {#each editor.shapes.all() as shape, i}
+            {#each editor.shapes as shape, i}
                 <div>
                     <label for="selection-shape-{i}">Shape {i + 1}</label>
 
@@ -84,26 +66,23 @@
     </div>
 
     <canvas
-        {@attach canvasAttachment}
-        class="h-full rounded-sm border border-border"
-        height="400"
-        width="400"
+        bind:this={canvas} class="h-full rounded-sm border border-border" height="400" width="400"
     ></canvas>
 
     <div class="flex flex-col gap-1">
         <p>Tools</p>
 
         <div>
-            {#each editor.toolManager.getApplicable(editor.toolCtx) as tool (tool.id)}
+            {#each editor.tools.getApplicable(editor.selection) as tool (tool.id)}
                 <div>
                     <label for="tool-{tool.id}">{tool.label}</label>
 
                     <input
-                        onclick={() => {editor.toolManager.activate(tool.id, editor.toolCtx)}}
+                        onclick={() => {editor.tools.activate(tool.id, editor.selection)}}
                         id="tool-{tool.id}"
                         type="radio"
                         name="tool"
-                        checked={editor.toolManager.isActive(tool.id)}
+                        checked={editor.tools.isActive(tool.id)}
                     >
                 </div>
             {/each}

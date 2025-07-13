@@ -5,8 +5,8 @@ export class Point2D {
     public y: number;
 
     public constructor(x: number, y: number) {
-        this.x = $state(x);
-        this.y = $state(y);
+        this.x = x;
+        this.y = y;
     }
 
     public add(vector: Vector): Point2D {

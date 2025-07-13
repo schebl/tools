@@ -1,5 +1,6 @@
 import type {SelectionStore} from "$lib/area/figures";
 import {Point2D} from "$lib/area/geometry";
+import type {Tool} from "$lib/area/tool";
 import {canvasConfig} from ".";
 
 export interface Drawable {
@@ -8,24 +9,29 @@ export interface Drawable {
 
 export class Renderer {
     private readonly ctx: CanvasRenderingContext2D;
-    private readonly drawables: Drawable[];
 
-    public constructor(ctx: CanvasRenderingContext2D, drawables: Drawable[]) {
+    public constructor(ctx: CanvasRenderingContext2D) {
         this.ctx = ctx;
-        this.drawables = drawables;
 
         this.ctx.strokeStyle = canvasConfig.DEFAULT_STYLE;
         this.ctx.fillStyle = canvasConfig.DEFAULT_STYLE;
     }
 
-    public redraw(selection: SelectionStore) {
-        const canvas = this.ctx.canvas;
-        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+    public redraw(
+        drawables: Drawable[],
+        selection: SelectionStore,
+        activeTool: Tool | null = null,
+    ) {
+        this.clear();
 
-        for (const drawable of this.drawables) {
+        for (const drawable of drawables) {
             this.ctx.save();
             drawable.draw(this.ctx, selection);
             this.ctx.restore();
+        }
+
+        if (activeTool) {
+            activeTool.renderOverlay?.(this);
         }
     }
 
@@ -50,5 +56,9 @@ export class Renderer {
         this.ctx.ellipse(center.x, center.y, Math.abs(w / 2), Math.abs(h / 2), 0, 0, Math.PI * 2);
         this.ctx.stroke();
         this.ctx.restore();
+    }
+
+    private clear() {
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
 }

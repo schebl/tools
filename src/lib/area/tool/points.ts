@@ -1,5 +1,5 @@
-import {canvasConfig} from "$lib/area/canvas";
-import {BezierPoint, distanceToBezierLine} from "$lib/area/figures";
+import {canvasConfig, Renderer} from "$lib/area/canvas";
+import {BezierPoint, distanceToBezierLine, SelectionStore} from "$lib/area/figures";
 import {Point2D, Vector} from "$lib/area/geometry";
 import type {Tool, ToolContext, ToolDescriptor} from ".";
 
@@ -11,28 +11,28 @@ export const addPointTool: ToolDescriptor = {
     id: "add-point",
     label: "Add point",
 
-    isApplicable({selection}: ToolContext): boolean {
+    isApplicable(selection: SelectionStore): boolean {
         return !!selection.shape;
     },
 
     create(): Tool {
         return new class implements Tool {
             public start(ctx: ToolContext): void {
-                if (!ctx.selection.shape) {
+                if (!ctx.editor.selection.shape) {
                     return;
                 }
 
-                for (let i = 0; i < ctx.selection.shape.points.length; i++) {
-                    const nextI = (i + 1) % ctx.selection.shape.points.length;
+                for (let i = 0; i < ctx.editor.selection.shape.points.length; i++) {
+                    const nextI = (i + 1) % ctx.editor.selection.shape.points.length;
 
-                    const current = ctx.selection.shape.points[i];
-                    const next = ctx.selection.shape.points[nextI];
+                    const current = ctx.editor.selection.shape.points[i];
+                    const next = ctx.editor.selection.shape.points[nextI];
 
                     if (distanceToBezierLine(ctx.click, current, next) < ADD_POINT_RADIUS) {
                         const point = BezierPoint.fromPoint(ctx.click);
 
-                        ctx.selection.shape.insertAt(nextI, point);
-                        ctx.selection.selectPoint(point);
+                        ctx.editor.selection.shape.insertAt(nextI, point);
+                        ctx.editor.selection.selectPoint(point);
                         break;
                     }
                 }
@@ -51,7 +51,7 @@ export const moveAnchorTool: ToolDescriptor = {
     id: "move-anchor",
     label: "Move anchor",
 
-    isApplicable({selection}: ToolContext): boolean {
+    isApplicable(selection: SelectionStore): boolean {
         return !!selection.shape && !!selection.point;
     },
 
@@ -60,9 +60,10 @@ export const moveAnchorTool: ToolDescriptor = {
             private movingAnchor: Point2D | null = null;
 
             public start(ctx: ToolContext): void {
-                if (ctx.selection.point && ctx.selection.point.anchor.distanceTo(ctx.click)
+                if (ctx.editor.selection.point
+                    && ctx.editor.selection.point.anchor.distanceTo(ctx.click)
                     <= POINT_SELECTION_RADIUS) {
-                    this.movingAnchor = ctx.selection.point.anchor;
+                    this.movingAnchor = ctx.editor.selection.point.anchor;
                 }
             }
 
@@ -85,7 +86,7 @@ export const moveControlTool: ToolDescriptor = {
     id: "move-control",
     label: "Move control",
 
-    isApplicable({selection}: ToolContext): boolean {
+    isApplicable(selection: SelectionStore): boolean {
         return !!selection.shape && !!selection.point;
     },
 
@@ -96,19 +97,19 @@ export const moveControlTool: ToolDescriptor = {
             private oldControl: Vector | null = null;
 
             public start(ctx: ToolContext): void {
-                if (!ctx.selection.point) {
+                if (!ctx.editor.selection.point) {
                     return;
                 }
 
                 this.startPoint = ctx.click;
 
-                if (this.startPoint.distanceTo(ctx.selection.point.handleInPoint())
+                if (this.startPoint.distanceTo(ctx.editor.selection.point.handleInPoint())
                     <= POINT_SELECTION_RADIUS) {
-                    this.movingControl = ctx.selection.point.handleIn;
+                    this.movingControl = ctx.editor.selection.point.handleIn;
                 }
-                if (this.startPoint.distanceTo(ctx.selection.point.handleOutPoint())
+                if (this.startPoint.distanceTo(ctx.editor.selection.point.handleOutPoint())
                     <= POINT_SELECTION_RADIUS) {
-                    this.movingControl = ctx.selection.point.handleOut;
+                    this.movingControl = ctx.editor.selection.point.handleOut;
                 }
 
                 if (this.movingControl) {
@@ -137,17 +138,29 @@ export const selectPointTool: ToolDescriptor = {
     id: "select-point",
     label: "Select point",
 
-    isApplicable({selection}: ToolContext): boolean {
+    isApplicable(selection: SelectionStore): boolean {
         return !!selection.shape;
     },
 
     create(): Tool {
         return new class implements Tool {
             private startPoint: Point2D | null = null;
+            private endPoint: Point2D | null = null;
             private isDragging = false;
 
-            public start({event}: ToolContext): void {
-                this.startPoint = new Point2D(event.offsetX, event.offsetY);
+            public renderOverlay(renderer: Renderer) {
+                if (!this.isDragging || !this.startPoint || !this.endPoint) {
+                    return;
+                }
+
+                const w = this.endPoint.x - this.startPoint.x;
+                const h = this.endPoint.y - this.startPoint.y;
+
+                renderer.drawSelectionBox(this.startPoint.x, this.startPoint.y, w, h);
+            }
+
+            public start({click}: ToolContext): void {
+                this.startPoint = click;
             }
 
             public update(ctx: ToolContext): void {
@@ -162,12 +175,8 @@ export const selectPointTool: ToolDescriptor = {
                     }
                 }
 
-                if (this.isDragging && ctx.renderer) {
-                    const w = ctx.click.x - this.startPoint.x;
-                    const h = ctx.click.y - this.startPoint.y;
-
-                    ctx.renderer.redraw(ctx.selection);
-                    ctx.renderer.drawSelectionBox(this.startPoint.x, this.startPoint.y, w, h);
+                if (this.isDragging) {
+                    this.endPoint = ctx.click;
                 }
             }
 
@@ -176,12 +185,12 @@ export const selectPointTool: ToolDescriptor = {
                     return;
                 }
 
-                ctx.selection.selectPoint(null);
+                ctx.editor.selection.selectPoint(null);
 
                 if (!this.isDragging) {
-                    for (const point of ctx.selection.shape?.points ?? []) {
+                    for (const point of ctx.editor.selection.shape?.points ?? []) {
                         if (point.anchor.distanceTo(ctx.click) <= POINT_SELECTION_RADIUS) {
-                            ctx.selection.selectPoint(point);
+                            ctx.editor.selection.selectPoint(point);
                             break;
                         }
                     }
@@ -194,7 +203,7 @@ export const selectPointTool: ToolDescriptor = {
                     const y1 = Math.max(this.startPoint.y, ctx.click.y);
 
                     const hits: BezierPoint[] = [];
-                    for (const point of ctx.selection.shape?.points ?? []) {
+                    for (const point of ctx.editor.selection.shape?.points ?? []) {
                         if (point.anchor.x >= x0 && point.anchor.x <= x1 && point.anchor.y >= y0
                             && point.anchor.y <= y1) {
                             hits.push(point);
@@ -202,13 +211,9 @@ export const selectPointTool: ToolDescriptor = {
                     }
 
                     if (hits.length > 0) {
-                        ctx.selection.selectPoint(hits[0]);
+                        ctx.editor.selection.selectPoint(hits[0]);
                         // TODO: multi-select
                     }
-                }
-
-                if (ctx.renderer) {
-                    ctx.renderer.redraw(ctx.selection);
                 }
             }
         };

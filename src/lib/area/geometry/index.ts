@@ -1,2 +1,2 @@
-export * from "./Point2D.svelte";
-export * from "./Vector.svelte";
+export * from "./Point2D.js";
+export * from "./Vector.js";
