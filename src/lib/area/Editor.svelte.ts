@@ -1,7 +1,7 @@
+import {Ruler, RulerDrawable, SelectionStore, Shape, ShapeDrawable} from "$lib/area/figures";
+import {type ToolContext, ToolManager} from "$lib/area/tool";
 import type {Drawable} from "$lib/area/ui";
 import {Renderer} from "$lib/area/ui";
-import {Ruler, RulerDrawable, SelectionStore, Shape, ShapeDrawable} from "$lib/area/figures";
-import {ToolManager} from "$lib/area/tool";
 
 export class Editor {
     public readonly tools: ToolManager;
@@ -30,10 +30,6 @@ export class Editor {
         const shapes = this.shapes.map(s => new ShapeDrawable(s));
         const ruler = this.ruler ? [new RulerDrawable(this.ruler)] : [];
         return [...shapes, ...ruler];
-    }
-
-    public addShape(shape: Shape): void {
-        this._shapes.push(shape);
     }
 
     public init(canvas: HTMLCanvasElement): void {
@@ -90,14 +86,30 @@ export class Editor {
             return;
         }
 
-        this._canvas.addEventListener("pointerdown", this.tools.handleEvent(this));
-        window.addEventListener("pointermove", this.tools.handleEvent(this));
-        window.addEventListener("pointerup", this.tools.handleEvent(this));
+        this._canvas.addEventListener("pointerdown", this.tools.handleEvent(this.createContext()));
+        window.addEventListener("pointermove", this.tools.handleEvent(this.createContext()));
+        window.addEventListener("pointerup", this.tools.handleEvent(this.createContext()));
     }
 
     private detachEventListeners() {
-        this._canvas?.removeEventListener("pointerdown", this.tools.handleEvent(this));
-        window.removeEventListener("pointermove", this.tools.handleEvent(this));
-        window.removeEventListener("pointerup", this.tools.handleEvent(this));
+        this._canvas?.removeEventListener(
+            "pointerdown",
+            this.tools.handleEvent(this.createContext()),
+        );
+        window.removeEventListener("pointermove", this.tools.handleEvent(this.createContext()));
+        window.removeEventListener("pointerup", this.tools.handleEvent(this.createContext()));
+    }
+
+    private createContext(): ToolContext {
+        return {
+            addShape: (shape: Shape) => {
+                this._shapes.push(shape);
+            },
+            ruler: this.ruler,
+            setRuler: (ruler: Ruler) => {
+                this.ruler = ruler;
+            },
+            selection: this.selection,
+        };
     }
 }

@@ -1,20 +1,21 @@
-import type {Renderer} from "$lib/area/ui";
-import {Editor} from "$lib/area/Editor.svelte";
-import {SelectionStore} from "$lib/area/figures";
+import {Ruler, SelectionStore, Shape} from "$lib/area/figures";
 import {Point2D} from "$lib/area/geometry";
+import type {Renderer} from "$lib/area/ui";
 
 export interface ToolContext {
-    editor: Editor;
-    click: Point2D;
+    ruler: Ruler | null;
+    selection: SelectionStore;
+    setRuler(ruler: Ruler): void;
+    addShape(shape: Shape): void;
 }
 
 /**
  * Represents lifecycle of canvas tool.
  */
 export interface Tool {
-    start(ctx: ToolContext): void;
-    update(ctx: ToolContext): void;
-    end(ctx: ToolContext): void;
+    start(click: Point2D): void;
+    update(click: Point2D): void;
+    end(click: Point2D): void;
     renderOverlay?(renderer: Renderer): void;
 }
 
@@ -22,7 +23,7 @@ export interface ToolDescriptor {
     readonly id: string;
     readonly label: string;
     isApplicable(selection: SelectionStore): boolean;
-    create(): Tool;
+    create(ctx: ToolContext): Tool;
 }
 
 export class ToolManager {
@@ -62,32 +63,29 @@ export class ToolManager {
         return this.descriptors.filter(d => d.isApplicable(selection));
     }
 
-    public handleEvent(editor: Editor) {
+    public handleEvent(ctx: ToolContext) {
         return (event: PointerEvent) => {
             if (!this.activeDescriptor) {
                 return;
             }
-            if (!this.activeDescriptor.isApplicable(editor.selection)) {
+            if (!this.activeDescriptor.isApplicable(ctx.selection)) {
                 this.activeDescriptor = null;
                 this.activeTool = null;
                 return;
             }
 
-            const ctx: ToolContext = {
-                editor: editor,
-                click: new Point2D(event.offsetX, event.offsetY),
-            };
+            const click = new Point2D(event.offsetX, event.offsetY);
 
             switch (event.type) {
             case "pointerdown":
-                this.activeTool = this.activeDescriptor.create();
-                this.activeTool.start(ctx);
+                this.activeTool = this.activeDescriptor.create(ctx);
+                this.activeTool.start(click);
                 break;
             case "pointermove":
-                this.activeTool?.update(ctx);
+                this.activeTool?.update(click);
                 break;
             case "pointerup":
-                this.activeTool?.end(ctx);
+                this.activeTool?.end(click);
                 this.activeTool = null;
                 break;
             }
