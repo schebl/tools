@@ -1,4 +1,4 @@
-import type {Drawable} from "$lib/area/canvas";
+import type {Drawable} from "$lib/area/ui";
 import type {Ruler} from "$lib/area/figures/Ruler.js";
 
 export class RulerDrawable implements Drawable {

@@ -1,5 +1,5 @@
-import type {Drawable} from "$lib/area/canvas";
-import {canvasConfig} from "$lib/area/canvas";
+import type {Drawable} from "$lib/area/ui";
+import {canvasConfig} from "$lib/area/ui";
 import {Point2D} from "$lib/area/geometry";
 import type {Shape} from ".";
 import {BezierPoint, SelectionStore} from ".";

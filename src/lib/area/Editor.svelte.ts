@@ -1,5 +1,5 @@
-import type {Drawable} from "$lib/area/canvas";
-import {Renderer} from "$lib/area/canvas";
+import type {Drawable} from "$lib/area/ui";
+import {Renderer} from "$lib/area/ui";
 import {Ruler, RulerDrawable, SelectionStore, Shape, ShapeDrawable} from "$lib/area/figures";
 import {ToolManager} from "$lib/area/tool";
 

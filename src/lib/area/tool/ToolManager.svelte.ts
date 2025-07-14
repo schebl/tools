@@ -1,4 +1,4 @@
-import type {Renderer} from "$lib/area/canvas";
+import type {Renderer} from "$lib/area/ui";
 import {Editor} from "$lib/area/Editor.svelte";
 import {SelectionStore} from "$lib/area/figures";
 import {Point2D} from "$lib/area/geometry";

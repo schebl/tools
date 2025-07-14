@@ -1,4 +1,4 @@
-import {Renderer} from "$lib/area/canvas";
+import {Renderer} from "$lib/area/ui";
 import {BezierPoint, Ruler, SelectionStore, Shape} from "$lib/area/figures";
 import {Point2D, Vector} from "$lib/area/geometry";
 import type {Tool, ToolContext, ToolDescriptor} from ".";
