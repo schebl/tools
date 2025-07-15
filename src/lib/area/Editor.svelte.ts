@@ -89,17 +89,27 @@ export class Editor {
         }
 
         this._canvas.addEventListener("pointerdown", this.tools.handleEvent(this.createContext()));
-        window.addEventListener("pointermove", this.tools.handleEvent(this.createContext()));
-        window.addEventListener("pointerup", this.tools.handleEvent(this.createContext()));
+        this._canvas.addEventListener("pointermove", this.tools.handleEvent(this.createContext()));
+        this._canvas.addEventListener("pointerup", this.tools.handleEvent(this.createContext()));
     }
 
     private detachEventListeners() {
-        this._canvas?.removeEventListener(
+        if (!this._canvas) {
+            return;
+        }
+
+        this._canvas.removeEventListener(
             "pointerdown",
             this.tools.handleEvent(this.createContext()),
         );
-        window.removeEventListener("pointermove", this.tools.handleEvent(this.createContext()));
-        window.removeEventListener("pointerup", this.tools.handleEvent(this.createContext()));
+        this._canvas.removeEventListener(
+            "pointermove",
+            this.tools.handleEvent(this.createContext()),
+        );
+        this._canvas.removeEventListener(
+            "pointerup",
+            this.tools.handleEvent(this.createContext()),
+        );
     }
 
     private createContext(): ToolContext {
