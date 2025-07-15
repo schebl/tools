@@ -4,8 +4,14 @@ import {bezierLineArea} from ".";
 const BEZIER_STEPS = 1000;
 
 export class Shape {
+    public readonly id;
+
     public points: BezierPoint[] = $state([]);
     public area = $derived(this.calcArea());
+
+    constructor() {
+        this.id = window.crypto.randomUUID();
+    }
 
     public addPoint(point: BezierPoint): void {
         this.points.push(point);

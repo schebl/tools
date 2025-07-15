@@ -2,9 +2,9 @@
     import {Editor} from "$lib/area/Editor.svelte";
     import {
         addPointTool,
+        controlManipulatorTool,
         createEllipseTool,
         createRectTool,
-        controlManipulatorTool,
         pointManipulatorTool,
         setRulerTool,
     } from "$lib/area/tool";
@@ -52,7 +52,7 @@
         <p>Shapes</p>
 
         <div>
-            {#each editor.shapes as shape, i}
+            {#each editor.shapes as shape, i (shape.id)}
                 <div>
                     <label for="selection-shape-{i}">Shape {i + 1}</label>
 
@@ -61,6 +61,7 @@
                         id="selection-shape-{i}"
                         type="radio"
                         name="selection"
+                        checked={shape.id === editor.selection.shape?.id}
                     >
                 </div>
             {/each}
