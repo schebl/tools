@@ -4,9 +4,10 @@ import type {Drawable} from "$lib/area/ui";
 import {Renderer} from "$lib/area/ui";
 
 export class Editor {
+    public totalArea = $derived(this.shapesArea());
     public readonly tools: ToolManager;
     public readonly selection: SelectionStore;
-    public ruler: Ruler | null = null;
+    public ruler = $state<Ruler | null>(null);
     private readonly _shapes = $state<Shape[]>([]);
     private _canvas: HTMLCanvasElement | null = null;
     private _renderer: Renderer | null = null;
@@ -20,10 +21,6 @@ export class Editor {
 
     public get shapes(): Shape[] {
         return this._shapes;
-    }
-
-    public get totalArea(): number {
-        return this.shapes.map(s => s.area()).reduce((sum, area) => sum + area, 0);
     }
 
     private get drawables(): Drawable[] {
@@ -48,6 +45,11 @@ export class Editor {
     public destroy() {
         this.stop();
         this.detachEventListeners();
+    }
+
+    private shapesArea(): number {
+        return this.shapes.map(s => s.area)
+            .reduce((sum, area) => sum + area, 0);
     }
 
     private start(): void {

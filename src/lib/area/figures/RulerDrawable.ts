@@ -1,5 +1,5 @@
 import type {Drawable} from "$lib/area/ui";
-import type {Ruler} from "$lib/area/figures/Ruler.js";
+import type {Ruler} from "$lib/area/figures/Ruler.svelte.js";
 
 export class RulerDrawable implements Drawable {
     private readonly ruler: Ruler;
@@ -17,7 +17,7 @@ export class RulerDrawable implements Drawable {
 
         const midX = (start.x + end.x) / 2;
         const midY = (start.y + end.y) / 2;
-        const length = this.ruler.length().toFixed(2);
+        const length = this.ruler.length.toFixed(2);
         ctx.fillText(`${length}px`, midX + 5, midY - 5);
     }
 }

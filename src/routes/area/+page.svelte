@@ -4,19 +4,19 @@
         addPointTool,
         createEllipseTool,
         createRectTool,
-        moveAnchorTool,
-        moveControlTool,
-        selectPointTool,
+        controlManipulatorTool,
+        pointManipulatorTool,
         setRulerTool,
     } from "$lib/area/tool";
     import {onMount} from "svelte";
 
     const editor = new Editor();
     editor.tools.register(createRectTool, createEllipseTool, setRulerTool);
-    editor.tools.register(addPointTool, selectPointTool);
-    editor.tools.register(moveAnchorTool, moveControlTool);
+    editor.tools.register(addPointTool, pointManipulatorTool, controlManipulatorTool);
 
-    let totalArea = $state(0);
+    let realUnitsInRuler = $state(1);
+    let scale = $derived(realUnitsInRuler / (editor.ruler?.length ?? 1));
+    let totalArea = $derived(editor.totalArea * scale ** 2);
 
     let canvas: HTMLCanvasElement;
 
@@ -41,9 +41,11 @@
             <p>{totalArea}</p>
         </div>
 
-        <button onclick={() => {totalArea = editor.totalArea}}>
-            Calculate
-        </button>
+        <div>
+            <p>Ruler</p>
+
+            Units <input bind:value={realUnitsInRuler} class="border border-border" type="number">
+        </div>
     </div>
 
     <div class="flex flex-col gap-1">

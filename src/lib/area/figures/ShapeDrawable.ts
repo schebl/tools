@@ -29,10 +29,10 @@ export class ShapeDrawable implements Drawable {
 
             this.drawPoint(ctx, selection, current);
             ctx.bezierCurveTo(
-                current.handleOutPoint().x,
-                current.handleOutPoint().y,
-                next.handleInPoint().x,
-                next.handleInPoint().y,
+                current.handleOut.x,
+                current.handleOut.y,
+                next.handleIn.x,
+                next.handleIn.y,
                 next.anchor.x,
                 next.anchor.y,
             );
@@ -56,12 +56,12 @@ export class ShapeDrawable implements Drawable {
         }
 
         this.drawPointControl(ctx, point.anchor, canvasConfig.SELECTED_POINT_SIZE);
-        this.drawPointControl(ctx, point.handleInPoint(), canvasConfig.SELECTED_POINT_SIZE);
-        this.drawPointControl(ctx, point.handleOutPoint(), canvasConfig.SELECTED_POINT_SIZE);
+        this.drawPointControl(ctx, point.handleIn, canvasConfig.SELECTED_POINT_SIZE);
+        this.drawPointControl(ctx, point.handleOut, canvasConfig.SELECTED_POINT_SIZE);
 
-        ctx.lineTo(point.handleInPoint().x, point.handleInPoint().y);
+        ctx.lineTo(point.handleIn.x, point.handleIn.y);
         ctx.moveTo(point.anchor.x, point.anchor.y);
-        ctx.lineTo(point.handleOutPoint().x, point.handleOutPoint().y);
+        ctx.lineTo(point.handleOut.x, point.handleOut.y);
         ctx.moveTo(point.anchor.x, point.anchor.y);
     }
 

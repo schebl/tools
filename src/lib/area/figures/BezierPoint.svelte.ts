@@ -2,13 +2,33 @@ import {Point2D, Vector} from "$lib/area/geometry";
 
 export class BezierPoint {
     public anchor: Point2D;
-    public handleOut: Vector;
-    public handleIn: Vector;
 
     public constructor(position: Point2D, handleIn: Vector, handleOut: Vector) {
-        this.anchor = position;
-        this.handleIn = handleIn;
-        this.handleOut = handleOut;
+        this.anchor = $state(position);
+        this._handleIn = $state(handleIn);
+        this._handleOut = $state(handleOut);
+    }
+
+    private _handleOut: Vector;
+
+    public get handleOut(): Point2D {
+        const handleOutPoint = this.anchor.add(this._handleOut);
+        return new Point2D(handleOutPoint.x, handleOutPoint.y);
+    }
+
+    public set handleOut(point: Point2D) {
+        this._handleOut = this.anchor.vectorTo(point);
+    }
+
+    private _handleIn: Vector;
+
+    public get handleIn(): Point2D {
+        const handleInPoint = this.anchor.add(this._handleIn);
+        return new Point2D(handleInPoint.x, handleInPoint.y);
+    }
+
+    public set handleIn(point: Point2D) {
+        this._handleIn = this.anchor.vectorTo(point);
     }
 
     public static fromXY(x: number, y: number): BezierPoint {
@@ -17,16 +37,6 @@ export class BezierPoint {
 
     public static fromPoint(point: Point2D): BezierPoint {
         return this.fromXY(point.x, point.y);
-    }
-
-    public handleOutPoint(): Point2D {
-        const handleOutPoint = this.anchor.add(this.handleOut);
-        return new Point2D(handleOutPoint.x, handleOutPoint.y);
-    }
-
-    public handleInPoint(): Point2D {
-        const handleInPoint = this.anchor.add(this.handleIn);
-        return new Point2D(handleInPoint.x, handleInPoint.y);
     }
 }
 
@@ -66,10 +76,10 @@ export function bezierLineArea(start: BezierPoint, end: BezierPoint, steps: numb
 
         const bezier = bezierAt(t, start, end);
 
-        const dx = -3 * uu * start.anchor.x + 3 * (uu - 2 * u * t) * start.handleOutPoint().x + 3
-            * (2 * u * t - tt) * end.handleInPoint().x + 3 * tt * end.anchor.x;
-        const dy = -3 * uu * start.anchor.y + 3 * (uu - 2 * u * t) * start.handleOutPoint().y + 3
-            * (2 * u * t - tt) * end.handleInPoint().y + 3 * tt * end.anchor.y;
+        const dx = -3 * uu * start.anchor.x + 3 * (uu - 2 * u * t) * start.handleOut.x + 3
+            * (2 * u * t - tt) * end.handleIn.x + 3 * tt * end.anchor.x;
+        const dy = -3 * uu * start.anchor.y + 3 * (uu - 2 * u * t) * start.handleOut.y + 3
+            * (2 * u * t - tt) * end.handleIn.y + 3 * tt * end.anchor.y;
 
         area += (bezier.x * dy - bezier.y * dx) * dt;
     }
@@ -85,9 +95,9 @@ export function bezierAt(t: number, start: BezierPoint, end: BezierPoint): Point
     const uuu = u ** 3;
 
     return new Point2D(
-        uuu * start.anchor.x + 3 * uu * t * start.handleOutPoint().x + 3 * u * tt
-        * end.handleInPoint().x + ttt * end.anchor.x,
-        uuu * start.anchor.y + 3 * uu * t * start.handleOutPoint().y + 3 * u * tt
-        * end.handleInPoint().y + ttt * end.anchor.y,
+        uuu * start.anchor.x + 3 * uu * t * start.handleOut.x + 3 * u * tt
+        * end.handleIn.x + ttt * end.anchor.x,
+        uuu * start.anchor.y + 3 * uu * t * start.handleOut.y + 3 * u * tt
+        * end.handleIn.y + ttt * end.anchor.y,
     );
 }
