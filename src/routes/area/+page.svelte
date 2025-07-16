@@ -17,6 +17,7 @@
     editor.tools.register(createRectTool, createEllipseTool, setRulerTool);
     editor.tools.register(addPointTool, pointManipulatorTool, controlManipulatorTool);
 
+    let unitName = $state("cm");
     let realUnitsInRuler = $state(1);
     let scale = $derived(realUnitsInRuler / (editor.ruler?.length ?? 1));
 
@@ -87,7 +88,7 @@
             {#if editor.selection.shape}
                 {@const shape = editor.selection.shape}
 
-                <div class="flex w-full flex-col gap-2">
+                <div class="flex max-w-full w-full flex-col gap-2">
                     <div class="flex justify-between gap-2">
                         <input
                             type="text"
@@ -96,10 +97,10 @@
                         >
                     </div>
 
-                    <div class="flex justify-between gap-2">
+                    <div class="flex justify-between gap-2 max-w-full">
                         <p>Area</p>
 
-                        <p>{scaledArea(shape.area, scale)}</p>
+                        <p class="wrap-anywhere">{scaledArea(shape.area, scale)}{unitName}</p>
                     </div>
 
                     <Button onclick={() => editor.removeShape(shape)}>
@@ -122,7 +123,7 @@
 
     <div class="grid grid-rows-5 gap-2 max-w-60">
         <Block heading="Total area">
-            <p>{scaledArea(editor.totalArea, scale)}</p>
+            <p class="wrap-anywhere">{scaledArea(editor.totalArea, scale)}{unitName}</p>
         </Block>
 
         <Block heading="Ruler">
@@ -134,7 +135,14 @@
                         bind:value={realUnitsInRuler}
                         class="w-full rounded-sm border border-border"
                         id="real-units"
+                        min="0"
                         type="number"
+                    >
+
+                    <input
+                        bind:value={unitName}
+                        class="w-1/3 rounded-sm border border-border"
+                        type="text"
                     >
                 </div>
             </div>
