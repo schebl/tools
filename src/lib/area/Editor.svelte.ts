@@ -31,6 +31,8 @@ export class Editor {
     }
 
     public addShape(shape: Shape): void {
+        shape.title = `Shape ${this._shapes.length + 1}`;
+
         this._shapes.push(shape);
         this.selection.selectShape(shape);
     }

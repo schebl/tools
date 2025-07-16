@@ -5,6 +5,7 @@ const BEZIER_STEPS = 1000;
 
 export class Shape {
     public readonly id;
+    public title: string = $state("");
 
     public points: BezierPoint[] = $state([]);
     public area = $derived(this.calcArea());

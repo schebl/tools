@@ -53,7 +53,7 @@
                 class="w-full overflow-y-auto rounded-sm border divide-border divide-y border-border"
                 role="listbox"
             >
-                {#each editor.shapes as shape, i (shape.id)}
+                {#each editor.shapes as shape (shape.id)}
                     {@const
                         selected = editor.selection.shape && editor.selection.shape.id === shape.id}
 
@@ -77,6 +77,14 @@
                 {@const shape = editor.selection.shape}
 
                 <div class="flex w-full flex-col gap-2">
+                    <div class="flex justify-between gap-2">
+                        <input
+                            type="text"
+                            bind:value={shape.title}
+                            class="w-full rounded-sm border border-border"
+                        >
+                    </div>
+
                     <Button onclick={() => editor.removeShape(shape)}>
                         Remove
                     </Button>
