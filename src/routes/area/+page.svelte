@@ -9,7 +9,7 @@
         setRulerTool,
     } from "$lib/area/tool";
     import Button from "$lib/components/Button.svelte";
-    import {onMount} from "svelte";
+    import {onDestroy, onMount} from "svelte";
     import {slide} from "svelte/transition";
     import Block from "./Block.svelte";
 
@@ -43,6 +43,31 @@
     function scaledArea(area: number, scale: number): string {
         return formatter.format(area * scale ** 2);
     }
+
+    let backgroundImageInput: HTMLInputElement;
+    let backgroundFiles = $state<FileList | null>(null);
+    let canvasImageUrl = $derived.by(() => {
+        const file = backgroundFiles?.[0] ?? null;
+        if (!file) {
+            return null;
+        }
+        return URL.createObjectURL(file);
+    });
+
+    $effect(() => {
+        const url = canvasImageUrl;
+        return () => {
+            if (url) {
+                URL.revokeObjectURL(url);
+            }
+        };
+    });
+
+    onDestroy(() => {
+        if (canvasImageUrl) {
+            URL.revokeObjectURL(canvasImageUrl);
+        }
+    });
 
     function handleKeydown(callback: () => void) {
         return function (event: KeyboardEvent) {
@@ -100,7 +125,7 @@
                     <div class="flex justify-between gap-2 max-w-full">
                         <p>Area</p>
 
-                        <p class="wrap-anywhere">{scaledArea(shape.area, scale)}{unitName}</p>
+                        <p class="wrap-anywhere">{scaledArea(shape.area, scale)} {unitName}</p>
                     </div>
 
                     <Button onclick={() => editor.removeShape(shape)}>
@@ -115,21 +140,23 @@
 
     <canvas
         bind:this={canvas}
-        class="rounded-sm border border-border"
+        class="rounded-sm border border-border bg-no-repeat bg-contain bg-center"
         height={canvasSize}
-        style="height: {canvasSize + 2}px"
+        style="height: {canvasSize + 2}px; background-image: {canvasImageUrl ? `url(${canvasImageUrl})` : ''}"
         width={canvasSize}
     ></canvas>
 
-    <div class="grid grid-rows-5 gap-2 max-w-60">
-        <Block heading="Total area">
-            <p class="wrap-anywhere">{scaledArea(editor.totalArea, scale)}{unitName}</p>
-        </Block>
-
-        <Block heading="Ruler">
-            <div>
+    <div class="flex flex-col gap-2 max-w-60">
+        <Block class="h-max">
+            <div class="flex flex-col gap-2">
                 <div class="flex justify-between gap-2">
-                    <label for="real-units">Units</label>
+                    <p>Total area</p>
+
+                    <p class="wrap-anywhere">{scaledArea(editor.totalArea, scale)} {unitName}</p>
+                </div>
+
+                <div class="flex justify-between gap-2">
+                    <label for="real-units">Ruler</label>
 
                     <input
                         bind:value={realUnitsInRuler}
@@ -145,10 +172,23 @@
                         type="text"
                     >
                 </div>
+
+                <Button onclick={() => backgroundImageInput.click()}>
+                    Set background
+                </Button>
+
+                <input
+                    accept="image/*"
+                    bind:files={backgroundFiles}
+                    bind:this={backgroundImageInput}
+                    class="hidden"
+                    id="files"
+                    type="file"
+                >
             </div>
         </Block>
 
-        <Block class="row-span-3" heading="Tools">
+        <Block class="h-full" heading="Tools">
             <div
                 class="w-full overflow-y-auto rounded-sm border divide-border divide-y border-border"
                 role="listbox"
