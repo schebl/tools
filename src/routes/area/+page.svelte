@@ -19,7 +19,6 @@
 
     let realUnitsInRuler = $state(1);
     let scale = $derived(realUnitsInRuler / (editor.ruler?.length ?? 1));
-    let totalArea = $derived(editor.totalArea * scale ** 2);
 
     let canvas: HTMLCanvasElement;
     const canvasSize = 500;
@@ -31,6 +30,18 @@
             editor.destroy();
         };
     });
+
+    const formatter = new Intl.NumberFormat(
+        undefined,
+        {
+            style: "decimal",
+            maximumFractionDigits: 2,
+        },
+    );
+
+    function scaledArea(area: number, scale: number): string {
+        return formatter.format(area * scale ** 2);
+    }
 
     function handleKeydown(callback: () => void) {
         return function (event: KeyboardEvent) {
@@ -85,6 +96,12 @@
                         >
                     </div>
 
+                    <div class="flex justify-between gap-2">
+                        <p>Area</p>
+
+                        <p>{scaledArea(shape.area, scale)}</p>
+                    </div>
+
                     <Button onclick={() => editor.removeShape(shape)}>
                         Remove
                     </Button>
@@ -105,7 +122,7 @@
 
     <div class="grid grid-rows-5 gap-2 max-w-60">
         <Block heading="Total area">
-            <p>{totalArea}</p>
+            <p>{scaledArea(editor.totalArea, scale)}</p>
         </Block>
 
         <Block heading="Ruler">
