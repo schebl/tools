@@ -8,7 +8,6 @@ export class Editor {
     public readonly tools: ToolManager;
     public readonly selection: SelectionStore;
     public ruler = $state<Ruler | null>(null);
-    private readonly _shapes = $state<Shape[]>([]);
     private _canvas: HTMLCanvasElement | null = null;
     private _renderer: Renderer | null = null;
     private _running: boolean = false;
@@ -19,6 +18,8 @@ export class Editor {
         this.selection = new SelectionStore();
     }
 
+    private _shapes = $state<Shape[]>([]);
+
     public get shapes(): Shape[] {
         return this._shapes;
     }
@@ -27,6 +28,16 @@ export class Editor {
         const shapes = this.shapes.map(s => new ShapeDrawable(s));
         const ruler = this.ruler ? [new RulerDrawable(this.ruler)] : [];
         return [...shapes, ...ruler];
+    }
+
+    public addShape(shape: Shape): void {
+        this._shapes.push(shape);
+        this.selection.selectShape(shape);
+    }
+
+    public removeShape(shape: Shape): void {
+        this._shapes = this._shapes.filter(s => s.id !== shape.id);
+        this.selection.selectShape(null);
     }
 
     public init(canvas: HTMLCanvasElement): void {
@@ -114,9 +125,7 @@ export class Editor {
 
     private createContext(): ToolContext {
         return {
-            addShape: (shape: Shape) => {
-                this._shapes.push(shape);
-            },
+            addShape: (shape) => this.addShape(shape),
             ruler: this.ruler,
             setRuler: (ruler: Ruler) => {
                 this.ruler = ruler;

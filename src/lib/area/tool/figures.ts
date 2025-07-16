@@ -86,7 +86,6 @@ export const createRectTool: ToolDescriptor = {
                 shape.addPoint(BezierPoint.fromXY(this.startPoint.x, this.startPoint.y + h));
 
                 ctx.addShape(shape);
-                ctx.selection.selectShape(shape);
             }
         };
     },
@@ -162,7 +161,6 @@ export const createEllipseTool: ToolDescriptor = {
                 addEllipseSegment(this.startPoint.x, center.y, 0, -h);
 
                 ctx.addShape(shape);
-                ctx.selection.selectShape(shape);
             }
         };
     },
