@@ -46,7 +46,7 @@
 
     let backgroundImageInput: HTMLInputElement;
     let backgroundFiles = $state<FileList | null>(null);
-    let canvasImageUrl = $derived.by(() => {
+    let backgroundURL = $derived.by(() => {
         const file = backgroundFiles?.[0] ?? null;
         if (!file) {
             return null;
@@ -55,19 +55,25 @@
     });
 
     $effect(() => {
-        const url = canvasImageUrl;
+        const url = backgroundURL;
         return () => {
-            if (url) {
-                URL.revokeObjectURL(url);
-            }
+            revokeURL(url);
         };
     });
 
     onDestroy(() => {
-        if (canvasImageUrl) {
-            URL.revokeObjectURL(canvasImageUrl);
-        }
+        revokeURL(backgroundURL);
     });
+
+    function clearBackground() {
+        backgroundFiles = new DataTransfer().files;
+    }
+
+    function revokeURL(url: string | null) {
+        if (url) {
+            URL.revokeObjectURL(url);
+        }
+    }
 
     function handleKeydown(callback: () => void) {
         return function (event: KeyboardEvent) {
@@ -113,7 +119,7 @@
             {#if editor.selection.shape}
                 {@const shape = editor.selection.shape}
 
-                <div class="flex max-w-full w-full flex-col gap-2">
+                <div class="flex w-full max-w-full flex-col gap-2">
                     <div class="flex justify-between gap-2">
                         <input
                             type="text"
@@ -122,7 +128,7 @@
                         >
                     </div>
 
-                    <div class="flex justify-between gap-2 max-w-full">
+                    <div class="flex max-w-full justify-between gap-2">
                         <p>Area</p>
 
                         <p class="wrap-anywhere">{scaledArea(shape.area, scale)} {unitName}</p>
@@ -140,9 +146,9 @@
 
     <canvas
         bind:this={canvas}
-        class="rounded-sm border border-border bg-no-repeat bg-contain bg-center"
+        class="rounded-sm border bg-contain bg-center bg-no-repeat border-border"
         height={canvasSize}
-        style="height: {canvasSize + 2}px; background-image: {canvasImageUrl ? `url(${canvasImageUrl})` : ''}"
+        style="height:{canvasSize + 2}px;background-image:{backgroundURL ? `url(${backgroundURL})` : ''}"
         width={canvasSize}
     ></canvas>
 
@@ -185,6 +191,10 @@
                     id="files"
                     type="file"
                 >
+
+                <Button onclick={clearBackground}>
+                    Clear background
+                </Button>
             </div>
         </Block>
 
