@@ -19,6 +19,8 @@
             {@render route("Symbols", "/symbols")}
 
             {@render route("Midpoint", "/midpoint")}
+
+            {@render route("Area", "/area")}
         </nav>
     </aside>
 
