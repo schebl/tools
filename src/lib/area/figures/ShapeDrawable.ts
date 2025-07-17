@@ -1,6 +1,6 @@
+import {Point2D} from "$lib/area/geometry";
 import type {Drawable} from "$lib/area/ui";
 import {canvasConfig} from "$lib/area/ui";
-import {Point2D} from "$lib/area/geometry";
 import type {Shape} from ".";
 import {BezierPoint, SelectionStore} from ".";
 
@@ -19,23 +19,24 @@ export class ShapeDrawable implements Drawable {
 
         ctx.beginPath();
 
-        for (let i = 0; i < this.shape.points.length; i++) {
-            const current = this.shape.points[i];
-            const next = this.shape.points[(i + 1) % this.shape.points.length];
-
+        this.shape.lines.forEach((line, i) => {
             if (i === 0) {
-                ctx.moveTo(current.anchor.x, current.anchor.y);
+                ctx.moveTo(line.start.anchor.x, line.start.anchor.y);
             }
 
-            this.drawPoint(ctx, selection, current);
+            this.drawPoint(ctx, selection, line.start);
             ctx.bezierCurveTo(
-                current.handleOut.x,
-                current.handleOut.y,
-                next.handleIn.x,
-                next.handleIn.y,
-                next.anchor.x,
-                next.anchor.y,
+                line.start.handleOut.x,
+                line.start.handleOut.y,
+                line.end.handleIn.x,
+                line.end.handleIn.y,
+                line.end.anchor.x,
+                line.end.anchor.y,
             );
+        });
+
+        if (!this.shape.closed) {
+            this.drawPoint(ctx, selection, this.shape.points[1]);
         }
 
         ctx.stroke();

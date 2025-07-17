@@ -5,6 +5,7 @@ import {Renderer} from "$lib/area/ui";
 
 export class Editor {
     public totalArea = $derived(this.shapesArea());
+    public totalLength = $derived(this.shapesLength());
     public readonly tools: ToolManager;
     public readonly selection: SelectionStore;
     public ruler = $state<Ruler | null>(null);
@@ -62,6 +63,11 @@ export class Editor {
 
     private shapesArea(): number {
         return this.shapes.map(s => s.area)
+            .reduce((sum, area) => sum + area, 0);
+    }
+
+    private shapesLength(): number {
+        return this.shapes.map(s => s.length)
             .reduce((sum, area) => sum + area, 0);
     }
 

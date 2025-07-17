@@ -4,6 +4,7 @@
         addPointTool,
         controlManipulatorTool,
         createEllipseTool,
+        CreateLineTool,
         createRectTool,
         pointManipulatorTool,
         setRulerTool,
@@ -13,16 +14,12 @@
     import {slide} from "svelte/transition";
     import Block from "./Block.svelte";
 
-    const editor = new Editor();
-    editor.tools.register(createRectTool, createEllipseTool, setRulerTool);
-    editor.tools.register(addPointTool, pointManipulatorTool, controlManipulatorTool);
-
-    let unitName = $state("cm");
-    let realUnitsInRuler = $state(1);
-    let scale = $derived(realUnitsInRuler / (editor.ruler?.length ?? 1));
-
     let canvas: HTMLCanvasElement;
     const canvasSize = 500;
+
+    const editor = new Editor();
+    editor.tools.register(CreateLineTool, createRectTool, createEllipseTool, setRulerTool);
+    editor.tools.register(addPointTool, pointManipulatorTool, controlManipulatorTool);
 
     onMount(() => {
         editor.init(canvas);
@@ -31,6 +28,10 @@
             editor.destroy();
         };
     });
+
+    let unitName = $state("cm");
+    let realUnitsInRuler = $state(1);
+    let scale = $derived(realUnitsInRuler / (editor.ruler?.length ?? 1));
 
     const formatter = new Intl.NumberFormat(
         undefined,
@@ -42,6 +43,10 @@
 
     function scaledArea(area: number, scale: number): string {
         return formatter.format(area * scale ** 2);
+    }
+
+    function scaledLength(length: number, scale: number): string {
+        return formatter.format(length * scale);
     }
 
     let backgroundImageInput: HTMLInputElement;
@@ -90,8 +95,8 @@
 </svelte:head>
 
 <div class="flex gap-2" style="height: {canvasSize + 2}px">
-    <div class="grid grid-rows-4 gap-2 min-w-60">
-        <Block class="row-span-3" heading="Shapes">
+    <div class="flex flex-col gap-2 min-w-60">
+        <Block class="h-2/3" heading="Shapes">
             <div
                 class="w-full overflow-y-auto rounded-sm border divide-border divide-y border-border"
                 role="listbox"
@@ -115,7 +120,7 @@
             </div>
         </Block>
 
-        <Block>
+        <Block class="flex-1">
             {#if editor.selection.shape}
                 {@const shape = editor.selection.shape}
 
@@ -132,6 +137,12 @@
                         <p>Area</p>
 
                         <p class="wrap-anywhere">{scaledArea(shape.area, scale)} {unitName}</p>
+                    </div>
+
+                    <div class="flex max-w-full justify-between gap-2">
+                        <p>Length</p>
+
+                        <p class="wrap-anywhere">{scaledLength(shape.length, scale)} {unitName}</p>
                     </div>
 
                     <Button onclick={() => editor.removeShape(shape)}>
@@ -159,6 +170,12 @@
                     <p>Total area</p>
 
                     <p class="wrap-anywhere">{scaledArea(editor.totalArea, scale)} {unitName}</p>
+                </div>
+
+                <div class="flex justify-between gap-2">
+                    <p>Total length</p>
+
+                    <p class="wrap-anywhere">{scaledLength(editor.totalLength, scale)} {unitName}</p>
                 </div>
 
                 <div class="flex justify-between gap-2">

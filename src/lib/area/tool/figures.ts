@@ -39,6 +39,50 @@ export const setRulerTool: ToolDescriptor = {
     },
 };
 
+export const CreateLineTool: ToolDescriptor = {
+    id: "create-line",
+    label: "Create line",
+
+    isApplicable(_: SelectionStore): boolean {
+        return true;
+    },
+
+    create(ctx: ToolContext): Tool {
+        return new class implements Tool {
+            private startPoint: Point2D | null = null;
+            private endPoint: Point2D | null = null;
+
+            public renderOverlay(renderer: Renderer) {
+                if (!this.startPoint || !this.endPoint) {
+                    return;
+                }
+
+                renderer.drawLine(this.startPoint, this.endPoint);
+            }
+
+            public start(click: Point2D) {
+                this.startPoint = click;
+            }
+
+            public update(click: Point2D) {
+                this.endPoint = click;
+            }
+
+            public end(click: Point2D) {
+                if (!this.startPoint) {
+                    return;
+                }
+
+                const shape = new Shape();
+                shape.addPoint(BezierPoint.fromPoint(this.startPoint));
+                shape.addPoint(BezierPoint.fromPoint(click));
+
+                ctx.addShape(shape);
+            }
+        };
+    },
+};
+
 export const createRectTool: ToolDescriptor = {
     id: "create-rect",
     label: "Create rectangle",

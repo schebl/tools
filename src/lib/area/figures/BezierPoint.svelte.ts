@@ -50,7 +50,7 @@ export function distanceToBezierLine(
 
     for (let i = 0; i <= steps; i++) {
         const t = i / steps;
-        const bezier = bezierAt(t, lineStart, lineEnd);
+        const bezier = bezierPointAt(t, lineStart, lineEnd);
 
         const vec = point.vectorTo(bezier);
 
@@ -67,27 +67,38 @@ export function bezierLineArea(start: BezierPoint, end: BezierPoint, steps: numb
     let area = 0;
 
     const dt = 1 / steps;
-
     for (let step = 0; step < steps; step++) {
         const t = step * dt;
-        const u = 1 - t;
-        const tt = t ** 2;
-        const uu = u ** 2;
 
-        const bezier = bezierAt(t, start, end);
+        const bezier = bezierPointAt(t, start, end);
+        const d = bezierDerivativeAt(t, start, end);
 
-        const dx = -3 * uu * start.anchor.x + 3 * (uu - 2 * u * t) * start.handleOut.x + 3
-            * (2 * u * t - tt) * end.handleIn.x + 3 * tt * end.anchor.x;
-        const dy = -3 * uu * start.anchor.y + 3 * (uu - 2 * u * t) * start.handleOut.y + 3
-            * (2 * u * t - tt) * end.handleIn.y + 3 * tt * end.anchor.y;
-
-        area += (bezier.x * dy - bezier.y * dx) * dt;
+        area += (bezier.x * d.y - bezier.y * d.x) * dt;
     }
 
     return area / 2;
 }
 
-export function bezierAt(t: number, start: BezierPoint, end: BezierPoint): Point2D {
+export function bezierLineLength(
+    start: BezierPoint,
+    end: BezierPoint,
+    steps: number = 1000,
+): number {
+    let length = 0;
+
+    const dt = 1 / steps;
+    for (let step = 0; step < steps; step++) {
+        const t = step * dt;
+
+        const d = bezierDerivativeAt(t, start, end);
+
+        length += Math.hypot(d.x, d.y) * dt;
+    }
+
+    return length;
+}
+
+export function bezierPointAt(t: number, start: BezierPoint, end: BezierPoint): Point2D {
     const u = 1 - t;
     const tt = t ** 2;
     const uu = u ** 2;
@@ -99,5 +110,18 @@ export function bezierAt(t: number, start: BezierPoint, end: BezierPoint): Point
         * end.handleIn.x + ttt * end.anchor.x,
         uuu * start.anchor.y + 3 * uu * t * start.handleOut.y + 3 * u * tt
         * end.handleIn.y + ttt * end.anchor.y,
+    );
+}
+
+export function bezierDerivativeAt(t: number, start: BezierPoint, end: BezierPoint): Point2D {
+    const u = 1 - t;
+    const tt = t ** 2;
+    const uu = u ** 2;
+
+    return new Point2D(
+        -3 * uu * start.anchor.x + 3 * (uu - 2 * u * t) * start.handleOut.x + 3
+        * (2 * u * t - tt) * end.handleIn.x + 3 * tt * end.anchor.x,
+        -3 * uu * start.anchor.y + 3 * (uu - 2 * u * t) * start.handleOut.y + 3
+        * (2 * u * t - tt) * end.handleIn.y + 3 * tt * end.anchor.y,
     );
 }
